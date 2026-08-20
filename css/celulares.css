@@ -1,0 +1,22 @@
+/* --- celulares.css --- */
+.dashboard-area { padding: 30px 40px; }
+.equipes-header { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+.header-esq { display: flex; align-items: center; gap: 20px; }
+.header-esq h2 { font-size: 20px; font-weight: bold; }
+
+.aparelhos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+.aparelho-card { background-color: var(--bg-card); border: 1px solid var(--bordas); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: 0.2s; }
+.aparelho-card:hover { border-color: var(--laranja-brabo); box-shadow: 0 4px 12px rgba(255, 61, 0, 0.1); }
+.aparelho-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bordas); padding-bottom: 15px; }
+.aparelho-titulo { display: flex; align-items: center; gap: 10px; }
+.aparelho-titulo h3 { color: var(--texto-claro); font-size: 16px; }
+
+.aparelho-status { font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: bold; }
+.status-online { background-color: #14532d; color: #86efac; }
+.status-offline { background-color: #7f1d1d; color: #fca5a5; }
+
+.aparelho-info { display: flex; justify-content: space-between; color: var(--texto-muted); font-size: 12px; }
+.chip-slot { background-color: var(--bg-secundario); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; border: 1px solid transparent; }
+.chip-slot.ocupado { border-color: var(--bordas); }
+.chip-slot .material-icons-round { font-size: 16px; color: var(--laranja-brabo); }
+.chip-numero { color: var(--texto-claro); font-size: 13px; font-weight: 500; }

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>Brabo Concursos - Chips</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+
+    <div id="menu-container" data-path="../"></div>
+    <script src="../js/menu.js"></script>
+
+    <main class="main-content">
+        <div class="equipes-header" style="padding: 30px 40px 10px 40px;">
+            <div class="header-esq">
+                <h2>Gerenciamento Completo de Chips</h2>
+                <div class="search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" id="input-filtro-chips" placeholder="Buscar por nome, número, status ou função..."
+                        oninput="filtrarChips()">
+                </div>
+            </div>
+            <button class="btn-add" onclick="abrirModalChip()">+ ADICIONAR NÚMERO</button>
+        </div>
+
+        <section class="dashboard-area" style="padding-top: 15px;">
+            
+            <!-- Barra de Filtros Rápidos -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <span class="material-icons-round" style="font-size: 16px; color: var(--laranja-brabo);">filter_alt</span>
+                    <label>Status:</label>
+                    <select id="filtro-status" class="filter-select" onchange="filtrarChips()">
+                        <option value="">Todos</option>
+                        <option value="Disponível">Disponível</option>
+                        <option value="Em Uso">Em Uso</option>
+                        <option value="Em Análise">Em Análise</option>
+                        <option value="Reconectar">Reconectar</option>
+                        <option value="Banido">Banido</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Função:</label>
+                    <select id="filtro-funcao" class="filter-select" onchange="filtrarChips()">
+                        <option value="">Todas</option>
+                        <option value="Envios">Envios</option>
+                        <option value="Criador">Criador</option>
+                        <option value="Reserva">Reserva</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Qualidade:</label>
+                    <select id="filtro-qualidade" class="filter-select" onchange="filtrarChips()">
+                        <option value="">Todas</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                </div>
+
+                <button onclick="limparFiltrosChips()" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: auto;">
+                    Limpar Filtros
+                </button>
+            </div>
+
+            <div class="equipe-card" style="padding: 0; overflow: hidden;">
+                <table>
+                    <thead style="background-color: var(--bg-secundario); user-select: none;">
+                        <tr>
+                            <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('nome')">
+                                <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
+                                    NOME (IDENTIFICAÇÃO) <span class="material-icons-round" id="icone-ordem-nome"
+                                        style="font-size: 16px;">sort</span>
+                                </div>
+                            </th>
+                            <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('numero')">
+                                <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
+                                    NÚMERO <span class="material-icons-round" id="icone-ordem-numero"
+                                        style="font-size: 16px;">sort</span>
+                                </div>
+                            </th>
+                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
+                                onclick="ordenarPor('atividade')">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                    ATIVIDADE <span class="material-icons-round" id="icone-ordem-atividade"
+                                        style="font-size: 16px;">sort</span>
+                                </div>
+                            </th>
+                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
+                                onclick="ordenarPor('funcao')">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                    FUNÇÃO <span class="material-icons-round" id="icone-ordem-funcao"
+                                        style="font-size: 16px;">sort</span>
+                                </div>
+                            </th>
+                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
+                                onclick="ordenarPor('qualidade')">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                    QUALIDADE <span class="material-icons-round" id="icone-ordem-qualidade"
+                                        style="font-size: 16px;">sort</span>
+                                </div>
+                            </th>
+                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
+                                onclick="ordenarPor('bans')">
+                                <div
+                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                    BANS <span class="material-icons-round" id="icone-ordem-bans"
+                                        style="font-size: 16px;">sort</span>
+                                </div>
+                            </th>
+                            <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-chips" style="padding: 0 20px;">
+                        <!-- Renderizado via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Completo de Cadastro/Edição -->
+    <div id="modal-chip" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3 id="modal-titulo">Adicionar Número</h3>
+                <span class="close-btn" onclick="fecharModalChip()">&times;</span>
+            </div>
+            <form id="form-chip">
+                <input type="hidden" id="edit-id">
+
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Nome (Identificação)</label>
+                        <input type="text" id="edit-nome" placeholder="Ex: MKT 90 (C)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Número do Celular</label>
+                        <input type="text" id="edit-numero" placeholder="Ex: (16) 99187-6538" maxlength="15"
+                            oninput="aplicarMascara(this)" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Atividade / Status</label>
+                        <select id="edit-num-atividade">
+                            <option value="Disponível">Disponível</option>
+                            <option value="Em Análise">Em Análise</option>
+                            <option value="Reconectar">Reconectar</option>
+                            <option value="Banido">Banido</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Função</label>
+                        <select id="edit-funcao">
+                            <option value="Envios">Envios</option>
+                            <option value="Criador">Criador</option>
+                            <option value="Reserva">Reserva</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Total de Bans (Automático)</label>
+                        <input type="number" id="edit-bans" readonly style="opacity: 0.8; cursor: not-allowed; background-color: rgba(0,0,0,0.3);">
+                        <small style="color: var(--texto-muted); font-size: 11px; margin-top: 3px; display: block;">
+                            * Incrementado automaticamente ao salvar como <b>Banido</b>.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Qualidade do Nº</label>
+                        <select id="edit-qualidade">
+                            <option value="Alta">Alta</option>
+                            <option value="Média">Média</option>
+                            <option value="Baixa">Baixa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Juízo Final</label>
+                        <input type="text" id="edit-juizo" placeholder="Opcional...">
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalChip()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Histórico Completo do Chip -->
+    <div id="modal-historico-chip" class="modal">
+        <div class="modal-content" style="width: 650px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons-round" style="color: var(--laranja-brabo);">history</span>
+                    <h3 id="hist-chip-titulo">Histórico do Chip</h3>
+                </div>
+                <span class="close-btn" onclick="fecharModalHistorico()">&times;</span>
+            </div>
+            
+            <div id="hist-chip-resumo" style="background-color: var(--bg-secundario); border: 1px solid var(--bordas); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <h4 style="font-size: 14px; color: var(--texto-claro); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <span class="material-icons-round" style="font-size: 18px; color: var(--laranja-brabo);">campaign</span> Campanhas em que participou:
+            </h4>
+
+            <div id="hist-chip-campanhas-lista" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <div class="modal-footer" style="margin-top: 25px;">
+                <button type="button" class="btn-salvar" onclick="fecharModalHistorico()" style="width: 100%;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/database.js"></script>
+    <script src="../js/script-celulares.js"></script>
+</body>
+
+</html>

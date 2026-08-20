@@ -1,0 +1,21 @@
+# Variáveis de ambiente e credenciais
+.env
+.env.local
+.env.*.local
+js/config.js
+
+# Banco de dados local SQLite legado
+*.db
+*.sqlite
+*.sqlite3
+banco.db
+
+# Python e caches
+__pycache__/
+*.pyc
+
+# IDEs e Sistema Operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

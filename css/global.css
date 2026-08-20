@@ -1,0 +1,95 @@
+/* --- global.css --- */
+:root {
+    --bg-principal: #0A0A0A;
+    --bg-secundario: #141414;
+    --bg-card: #1A1A1A;
+    --laranja-brabo: #FF3D00;
+    --laranja-hover: #CC3100;
+    --texto-claro: #FFFFFF;
+    --texto-muted: rgba(255, 255, 255, 0.54);
+    --bordas: #262626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background-color: var(--bg-principal); color: var(--texto-claro); display: flex; height: 100vh; overflow: hidden; }
+
+/* Menu Lateral e Header Tabs */
+.sidebar { width: 260px; background-color: var(--bg-secundario); border-right: 1px solid var(--bordas); display: flex; flex-direction: column; }
+.logo-area { padding: 30px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.logo-b { color: var(--laranja-brabo); font-size: 32px; font-weight: bold; }
+.logo-text { font-size: 18px; font-weight: bold; letter-spacing: 2px; }
+.menu-item { display: flex; align-items: center; padding: 15px 25px; cursor: pointer; color: var(--texto-muted); gap: 15px; transition: 0.2s; text-decoration: none; }
+.menu-item:hover, .menu-item.active { background-color: var(--bg-card); color: var(--texto-claro); }
+.menu-item.active { border-left: 4px solid var(--laranja-brabo); }
+.menu-item .material-icons-round { font-size: 20px; }
+.menu-item.active .material-icons-round { color: var(--laranja-brabo); }
+
+.main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+.header-tabs { display: flex; padding: 20px 40px 0 40px; border-bottom: 1px solid var(--bordas); gap: 30px; }
+.tab { padding-bottom: 15px; cursor: pointer; color: var(--texto-muted); font-weight: 500; font-size: 14px; transition: 0.2s; }
+.tab:hover { color: var(--texto-claro); }
+.tab.active { color: var(--laranja-brabo); border-bottom: 3px solid var(--laranja-brabo); font-weight: bold; }
+
+/* Botões Globais */
+.btn-icon { background: none; border: none; color: var(--laranja-brabo); cursor: pointer; transition: 0.2s; }
+.btn-icon:hover { color: var(--laranja-hover); transform: scale(1.1); }
+.btn-add, .btn-salvar { background-color: var(--laranja-brabo); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-add:hover, .btn-salvar:hover { background-color: var(--laranja-hover); }
+.btn-cancelar { background-color: transparent; color: var(--texto-muted); border: 1px solid var(--bordas); padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+.btn-cancelar:hover { background-color: var(--bg-card); color: var(--texto-claro); }
+
+/* Estrutura Base de Busca */
+.search-box { display: flex; align-items: center; background-color: var(--bg-secundario); border: 1px solid var(--bordas); border-radius: 6px; padding: 6px 12px; transition: 0.2s; }
+.search-box:focus-within { border-color: var(--laranja-brabo); }
+.search-box .material-icons-round { color: var(--texto-muted); font-size: 20px; margin-right: 8px; }
+.search-box input { background: transparent; border: none; color: var(--texto-claro); outline: none; font-size: 14px; width: 250px; }
+.search-box input::placeholder { color: var(--texto-muted); }
+
+/* Modal Global */
+.modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); align-items: center; justify-content: center; }
+.modal-content { background-color: var(--bg-secundario); border: 1px solid var(--bordas); border-radius: 8px; width: 600px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.close-btn { color: var(--texto-muted); font-size: 28px; font-weight: bold; cursor: pointer; }
+.close-btn:hover { color: var(--texto-claro); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } 
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 13px; color: var(--texto-muted); margin-bottom: 5px; }
+.form-group input, .form-group select { background-color: var(--bg-card); border: 1px solid var(--bordas); color: var(--texto-claro); padding: 10px; border-radius: 4px; font-size: 14px; outline: none; transition: 0.2s; }
+.form-group input:focus, .form-group select:focus { border-color: var(--laranja-brabo); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+
+/* 1. MATA O PISCO BRANCO ENTRE AS PÁGINAS */
+html, body {
+    background-color: var(--bg-principal, #0f1115);
+}
+
+/* 2. ANIMAÇÃO DE ENTRADA DA TELA NOVA */
+.main-content {
+    animation: entrarTela 0.25s ease-out forwards;
+}
+
+@keyframes entrarTela {
+    from {
+        opacity: 0;
+        transform: translateX(10px); /* Vem um pouco da direita */
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 3. CLASSE DE SAÍDA (O JS vai injetar isso quando você clicar no menu) */
+.main-content.saindo {
+    opacity: 0;
+    transform: translateX(-10px); /* Sai um pouco para a esquerda */
+    transition: all 0.2s ease-in;
+}
+
+/* Badges de Atividade / Status dos Números */
+.bg-ativ-uso { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.bg-ativ-disponivel { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+.bg-ativ-banido { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); }
+.bg-ativ-analise { background-color: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+.bg-ativ-reconectar { background-color: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
+.bg-ativ-indisponivel { background-color: rgba(107, 114, 128, 0.15); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.4); }

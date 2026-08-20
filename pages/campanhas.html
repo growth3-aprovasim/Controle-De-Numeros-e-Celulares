@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brabo Concursos - Campanhas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+    <div id="menu-container" data-path="../"></div>
+    <script src="../js/menu.js"></script>
+
+    <main class="main-content">
+        <div class="equipes-header" style="padding: 30px 40px 10px 40px;">
+            <div class="header-esq">
+                <h2>Gerenciamento de Campanhas</h2>
+                <div class="search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" id="input-filtro-campanhas" placeholder="Buscar campanha..." oninput="filtrarCampanhas()">
+                </div>
+            </div>
+            <button class="btn-add" onclick="abrirModalCampanha()">+ NOVA CAMPANHA</button>
+        </div>
+
+        <section class="dashboard-area">
+            <div id="grid-campanhas" style="display: flex; flex-direction: column; gap: 25px;">
+                <!-- Renderizado via JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Criação / Edição de Campanha -->
+    <div id="modal-campanha" class="modal">
+        <div class="modal-content" style="width: 650px;">
+            <div class="modal-header">
+                <h3 id="modal-titulo-camp">Nova Campanha</h3>
+                <span class="close-btn" onclick="fecharModalCampanha()">&times;</span>
+            </div>
+            <form id="form-campanha">
+                <input type="hidden" id="edit-camp-id">
+                
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Nome da Campanha</label>
+                        <input type="text" id="edit-camp-nome" placeholder="Ex: Black Friday 2026" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Expert da Campanha</label>
+                        <select id="edit-camp-expert">
+                            <option value="Mateus">Mateus</option>
+                            <option value="Ivan">Ivan</option>
+                            <option value="Graton">Graton</option>
+                            <option value="Black">Black</option>
+                            <option value="Geral">Geral</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="edit-camp-status">
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Agendada">Agendada</option>
+                            <option value="Encerrada">Encerrada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Data Alvo / Início</label>
+                        <input type="date" id="edit-camp-data">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 13px; color: var(--texto-claro); font-weight: 500;">
+                            Selecionar Números e Atribuir Grupos:
+                        </label>
+                        <span id="contador-selecionados-camp" style="font-size: 12px; color: var(--laranja-brabo); font-weight: 600;">
+                            0 selecionados
+                        </span>
+                    </div>
+
+                    <!-- Barra de busca e filtros rápidos no modal -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                        <div class="search-box" style="flex: 1; background-color: var(--bg-card);">
+                            <span class="material-icons-round" style="font-size: 18px;">search</span>
+                            <input type="text" id="busca-numeros-modal" placeholder="Filtrar por nome ou telefone..." oninput="filtrarNumerosModal()" style="font-size: 13px; width: 100%;">
+                        </div>
+                        <select id="filtro-funcao-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px;">
+                            <option value="">Todas Funções</option>
+                            <option value="Envios">Envios</option>
+                            <option value="Criador">Criador</option>
+                            <option value="Reserva">Reserva</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="marcarTodosNumerosModal(true)" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                                Marcar visíveis
+                            </button>
+                            <button type="button" onclick="marcarTodosNumerosModal(false)" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
+                                Desmarcar todos
+                            </button>
+                        </div>
+                        <span style="font-size: 11px; color: var(--texto-muted);">
+                            Ao marcar, selecione <b>VIP</b>, <b>NORMAL</b> ou <b>AMBOS</b>
+                        </span>
+                    </div>
+
+                    <div id="lista-checkbox-numeros-camp" style="background-color: var(--bg-card); border: 1px solid var(--bordas); border-radius: 6px; padding: 10px; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Checkboxes dos Números carregados via JS -->
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalCampanha()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Campanha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/database.js"></script>
+    <script src="../js/script-campanhas.js"></script>
+</body>
+</html>

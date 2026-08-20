@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>Brabo Concursos - Gerenciamento de Equipes</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- CSS Modularizado -->
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<!-- pages/celulares.html  E  pages/equipes.html -->
+<body>
+
+    <!-- Repare no data-path mudando para ../ porque estamos dentro da pasta pages -->
+    <div id="menu-container" data-path="../"></div>
+    <script src="../js/menu.js"></script>
+
+    <main class="main-content">
+        
+        <!-- O resto do seu código main continua igual... -->
+        <div class="equipes-header" style="padding: 30px 40px 10px 40px;">
+            <div class="header-esq">
+                <h2>Gerenciamento de Equipes (Limite: 6 Números)</h2>
+                <div class="search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" id="input-filtro-equipes" placeholder="Buscar equipe ou expert..." oninput="filtrarEquipes()">
+                </div>
+            </div>
+            <button class="btn-add" onclick="abrirModalEquipe()">+ CRIAR NOVA EQUIPE</button>
+        </div>
+
+        <section class="dashboard-area">
+            <div id="grid-equipes" style="display: flex; flex-direction: column; gap: 25px;">
+                <!-- Renderizado via JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Criação / Edição de Equipe -->
+    <div id="modal-equipe" class="modal">
+        <div class="modal-content" style="width: 550px;">
+            <div class="modal-header">
+                <h3 id="modal-titulo-eq">Criar Nova Equipe</h3>
+                <span class="close-btn" onclick="fecharModalEquipe()">&times;</span>
+            </div>
+            <form id="form-equipe">
+                <input type="hidden" id="edit-eq-id">
+                
+                <div class="form-grid">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Nome da Equipe</label>
+                        <input type="text" id="edit-eq-nome" placeholder="Ex: 🦁 DELTA" required>
+                    </div>
+                    
+                    <!-- NOVO: Múltiplos Experts -->
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Experts Responsáveis (Pode marcar mais de um)</label>
+                        <div style="display: flex; gap: 15px; margin-top: 8px;" id="container-experts">
+                            <label style="color: var(--texto-claro); font-size: 14px; cursor: pointer;"><input type="checkbox" name="eq-experts" value="Mateus"> Mateus</label>
+                            <label style="color: var(--texto-claro); font-size: 14px; cursor: pointer;"><input type="checkbox" name="eq-experts" value="Ivan"> Ivan</label>
+                            <label style="color: var(--texto-claro); font-size: 14px; cursor: pointer;"><input type="checkbox" name="eq-experts" value="Graton"> Graton</label>
+                            <label style="color: var(--texto-claro); font-size: 14px; cursor: pointer;"><input type="checkbox" name="eq-experts" value="Black"> Black</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Status da Equipe</label>
+                        <select id="edit-eq-status">
+                            <option value="Disponível">Disponível</option>
+                            <option value="Indisponível">Indisponível</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="font-size: 13px; color: var(--texto-muted); display: block; margin-bottom: 8px;">
+                        Selecione os Números (Máximo de 6 por equipe):
+                    </label>
+                    <div id="lista-checkbox-numeros" style="background-color: var(--bg-card); border: 1px solid var(--bordas); border-radius: 6px; padding: 12px; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Checkboxes carregados via JS -->
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalEquipe()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Equipe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ORDEM CORRETA: Banco primeiro, Script depois -->
+    <script src="../js/database.js"></script>
+    <script src="../js/script-equipes.js"></script>
+</body>
+</html>
