@@ -99,30 +99,57 @@ function renderizarCampanhasDashboard(campanhas, todosNumeros) {
                 const chip = item.num;
                 const grp = item.grupo;
 
-                let borderStyle = '1px solid var(--bordas)';
+                // Cores dinâmicas da caixa baseadas na atividade do chip (Em Uso = Verde, Em Análise = Amarelo, Banido = Vermelho, Reconectar = Roxo)
+                let borderStyle = '1px solid rgba(255, 255, 255, 0.08)';
                 let bgCard = 'rgba(255, 255, 255, 0.02)';
-                let badgeGrupoHTML = `<span class="badge badge-normal" style="font-size: 10px; padding: 2px 6px;">📱 Normal</span>`;
+                let corAtividade = '#94a3b8';
+                let ativ = chip.atividade || 'Disponível';
 
+                if (ativ === 'Em Uso') {
+                    borderStyle = '1px solid rgba(16, 185, 129, 0.6)';
+                    bgCard = 'rgba(16, 185, 129, 0.10)';
+                    corAtividade = '#10b981';
+                } else if (ativ === 'Em Análise') {
+                    borderStyle = '1px solid rgba(245, 158, 11, 0.6)';
+                    bgCard = 'rgba(245, 158, 11, 0.10)';
+                    corAtividade = '#f59e0b';
+                } else if (ativ === 'Banido') {
+                    borderStyle = '1px solid rgba(239, 68, 68, 0.6)';
+                    bgCard = 'rgba(239, 68, 68, 0.10)';
+                    corAtividade = '#ef4444';
+                } else if (ativ === 'Reconectar') {
+                    borderStyle = '1px solid rgba(168, 85, 247, 0.6)';
+                    bgCard = 'rgba(168, 85, 247, 0.10)';
+                    corAtividade = '#a855f7';
+                } else {
+                    borderStyle = '1px solid rgba(59, 130, 246, 0.4)';
+                    bgCard = 'rgba(59, 130, 246, 0.05)';
+                    corAtividade = '#60a5fa';
+                }
+
+                let badgeGrupoHTML = `<span class="badge badge-normal" style="font-size: 10px; padding: 2px 6px;">📱 Normal</span>`;
                 if (grp === 'VIP') {
-                    borderStyle = '1px solid #f59e0b';
-                    bgCard = 'rgba(245, 158, 11, 0.08)';
                     badgeGrupoHTML = `<span class="badge badge-vip" style="font-size: 10px; padding: 2px 6px;">⭐ VIP</span>`;
                 } else if (grp === 'AMBOS') {
-                    borderStyle = '1px solid #a855f7';
-                    bgCard = 'rgba(168, 85, 247, 0.08)';
                     badgeGrupoHTML = `<span class="badge badge-ambos" style="font-size: 10px; padding: 2px 6px;">👑 Ambos</span>`;
                 }
 
                 let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
 
                 chipsGridHTML += `
-                    <div style="background-color: ${bgCard}; border: ${borderStyle}; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s;">
+                    <div style="background-color: ${bgCard}; border: ${borderStyle}; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <b style="font-size: 13px; color: var(--texto-claro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${chip.nome}</b>
+                            <b style="font-size: 13px; color: var(--texto-claro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${chip.nome}">${chip.nome}</b>
                             ${badgeGrupoHTML}
                         </div>
-                        <span style="font-size: 11px; color: var(--texto-muted);">${chip.numero}</span>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 11px; color: var(--texto-muted);">${chip.numero}</span>
+                            <span style="font-size: 10px; font-weight: 600; color: ${corAtividade}; display: flex; align-items: center; gap: 3px;">
+                                <span style="width: 6px; height: 6px; border-radius: 50%; background-color: ${corAtividade}; display: inline-block;"></span>
+                                ${ativ}
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px;">
                             <span class="badge ${classFunc}" style="font-size: 9px; padding: 2px 5px;">${chip.funcao || 'Reserva'}</span>
                             <span style="font-size: 10px; color: var(--texto-muted);">Bans: <b style="color: ${chip.bans > 0 ? '#ef4444' : 'var(--texto-claro)'}">${chip.bans || 0}</b></span>
                         </div>

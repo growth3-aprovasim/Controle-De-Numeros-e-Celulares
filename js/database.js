@@ -87,6 +87,7 @@ window.DB = {
             return data.map(item => ({
                 id: item.id,
                 equipe: item.equipe || "📌 SEM EQUIPE",
+                plataforma: item.plataforma || (item.equipe === "UNNICHAT" || item.equipe === "Unnichat" ? "Unnichat" : "Sendflow"),
                 nome: item.nome || "",
                 numero: item.numero || "",
                 atividade: item.atividade || "Disponível",
@@ -96,15 +97,19 @@ window.DB = {
                 juizo: item.juizo || "",
                 statusEquipe: item.status_equipe || "Disponível",
                 expert: item.expert || ["Mateus"],
-                isCapitao: !!item.is_capitao
+                isCapitao: !!item.is_capitao,
+                bm: item.bm || "",
+                target: item.target || ""
             }));
         },
         salvar: async function(item) {
             const sb = await getSupabase();
             if (!sb) return;
             
+            const plataforma = item.plataforma || (item.equipe === "UNNICHAT" ? "Unnichat" : "Sendflow");
             const payload = {
-                equipe: item.equipe || "📌 SEM EQUIPE",
+                equipe: item.equipe || (plataforma === "Unnichat" ? "UNNICHAT" : "SENDFLOW"),
+                plataforma: plataforma,
                 nome: item.nome,
                 numero: item.numero,
                 atividade: item.atividade || "Disponível",
@@ -114,15 +119,38 @@ window.DB = {
                 juizo: item.juizo || "",
                 status_equipe: item.statusEquipe || "Disponível",
                 expert: Array.isArray(item.expert) ? item.expert : [item.expert || "Mateus"],
-                is_capitao: !!item.isCapitao
+                is_capitao: !!item.isCapitao,
+                bm: item.bm || "",
+                target: item.target || ""
             };
 
             if (!item.id) {
                 const { data, error } = await sb.from('cnc_numeros_controle').insert([payload]).select();
-                if (error) console.error("Erro ao inserir:", error);
+                if (error) {
+                    console.error("Erro ao inserir:", error);
+                    // Fallback caso as colunas bm/target/plataforma ainda não existam no Supabase
+                    if (error.message && (error.message.includes('column') || error.code === '42703')) {
+                        delete payload.bm;
+                        delete payload.target;
+                        delete payload.plataforma;
+                        const { data: d2, error: err2 } = await sb.from('cnc_numeros_controle').insert([payload]).select();
+                        if (err2) console.error("Erro no fallback de inserção:", err2);
+                        return d2 && d2[0] ? { ...item, id: d2[0].id } : item;
+                    }
+                }
                 return data && data[0] ? { ...item, id: data[0].id } : item;
             } else {
-                await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
+                const { error } = await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
+                if (error) {
+                    console.error("Erro ao atualizar:", error);
+                    // Fallback caso as colunas ainda não existam no Supabase
+                    if (error.message && (error.message.includes('column') || error.code === '42703')) {
+                        delete payload.bm;
+                        delete payload.target;
+                        delete payload.plataforma;
+                        await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
+                    }
+                }
                 return item;
             }
         },

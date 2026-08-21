@@ -185,8 +185,31 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
 function filtrarCampanhas() {
     const input = document.getElementById('input-filtro-campanhas');
     const termo = input ? input.value.toLowerCase().trim() : '';
-    const filtrados = listaCampanhas.filter(item => item.nome && item.nome.toLowerCase().includes(termo));
+
+    const selectExpert = document.getElementById('filtro-expert-camp');
+    const expertFiltro = selectExpert ? selectExpert.value : '';
+
+    const selectStatus = document.getElementById('filtro-status-camp');
+    const statusFiltro = selectStatus ? selectStatus.value : '';
+
+    const filtrados = listaCampanhas.filter(item => {
+        if (expertFiltro && item.expert !== expertFiltro) return false;
+        if (statusFiltro && item.status !== statusFiltro) return false;
+        if (termo && (!item.nome || !item.nome.toLowerCase().includes(termo))) return false;
+        return true;
+    });
+
     renderizarCampanhas(filtrados);
+}
+
+function limparFiltrosCampanhas() {
+    const input = document.getElementById('input-filtro-campanhas');
+    if (input) input.value = '';
+    const selectExpert = document.getElementById('filtro-expert-camp');
+    if (selectExpert) selectExpert.value = '';
+    const selectStatus = document.getElementById('filtro-status-camp');
+    if (selectStatus) selectStatus.value = '';
+    renderizarCampanhas(listaCampanhas);
 }
 
 function abrirModalCampanha(id = null) {

@@ -5,10 +5,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
-    <title>Brabo Concursos - Chips</title>
+    <title>Brabo Concursos - Chips & Números</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .neon-bar-amarela {
+            background: rgba(245, 158, 11, 0.04);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+            border-radius: 8px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            transition: all 0.3s ease;
+        }
+        .neon-bar-amarela:focus-within {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            border-color: rgba(245, 158, 11, 0.6);
+        }
+
+        .neon-bar-verde {
+            background: rgba(16, 185, 129, 0.04);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+            border-radius: 8px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            transition: all 0.3s ease;
+        }
+        .neon-bar-verde:focus-within {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.6);
+        }
+
+        .tabela-colapsavel-header {
+            padding: 16px 20px;
+            background-color: var(--bg-secundario);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--bordas);
+            transition: background-color 0.2s;
+        }
+        .tabela-colapsavel-header:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        .chevron-toggle {
+            transition: transform 0.3s ease;
+            font-size: 22px;
+            color: var(--texto-muted);
+        }
+        .colapsado .chevron-toggle {
+            transform: rotate(-90deg);
+        }
+        .colapsado .tabela-corpo-wrapper {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -19,118 +80,213 @@
     <main class="main-content">
         <div class="equipes-header" style="padding: 30px 40px 10px 40px;">
             <div class="header-esq">
-                <h2>Gerenciamento Completo de Chips</h2>
+                <h2>Gerenciamento de Chips & Números</h2>
                 <div class="search-box">
                     <span class="material-icons-round">search</span>
-                    <input type="text" id="input-filtro-chips" placeholder="Buscar por nome, número, status ou função..."
-                        oninput="filtrarChips()">
+                    <input type="text" id="input-filtro-chips" placeholder="Buscar em todas as tabelas (nome, número, BM, target, status...)"
+                        oninput="filtrarTodosChips()">
                 </div>
             </div>
-            <button class="btn-add" onclick="abrirModalChip()">+ ADICIONAR NÚMERO</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-add" onclick="abrirModalChip()">+ ADICIONAR NÚMERO</button>
+            </div>
         </div>
 
-        <section class="dashboard-area" style="padding-top: 15px;">
+        <section class="dashboard-area" style="padding-top: 15px; display: flex; flex-direction: column; gap: 25px;">
             
-            <!-- Barra de Filtros Rápidos -->
-            <div class="filter-bar">
-                <div class="filter-group">
-                    <span class="material-icons-round" style="font-size: 16px; color: var(--laranja-brabo);">filter_alt</span>
-                    <label>Status:</label>
-                    <select id="filtro-status" class="filter-select" onchange="filtrarChips()">
-                        <option value="">Todos</option>
-                        <option value="Disponível">Disponível</option>
-                        <option value="Em Uso">Em Uso</option>
-                        <option value="Em Análise">Em Análise</option>
-                        <option value="Reconectar">Reconectar</option>
-                        <option value="Banido">Banido</option>
-                    </select>
+            <!-- DUAS BARRAS DE FILTRO COM NEON -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px;">
+                
+                <!-- Barra 1: Sendflow (Neon Amarelo) -->
+                <div class="neon-bar-amarela">
+                    <div style="display: flex; align-items: center; gap: 6px; width: 100%; margin-bottom: 4px;">
+                        <span class="material-icons-round" style="font-size: 18px; color: #f59e0b;">filter_alt</span>
+                        <b style="font-size: 13px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px;">Filtros Sendflow</b>
+                        <button onclick="limparFiltrosSendflow()" style="background: none; border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: auto;">
+                            Limpar
+                        </button>
+                    </div>
+
+                    <div class="filter-group" style="flex: 1; min-width: 110px;">
+                        <label style="color: #f59e0b;">Status:</label>
+                        <select id="filtro-status" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                            <option value="">Todos</option>
+                            <option value="Disponível">Disponível</option>
+                            <option value="Em Uso">Em Uso</option>
+                            <option value="Em Análise">Em Análise</option>
+                            <option value="Reconectar">Reconectar</option>
+                            <option value="Banido">Banido</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="flex: 1; min-width: 110px;">
+                        <label style="color: #f59e0b;">Função:</label>
+                        <select id="filtro-funcao" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                            <option value="">Todas</option>
+                            <option value="Envios">Envios</option>
+                            <option value="Criador">Criador</option>
+                            <option value="Reserva">Reserva</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="flex: 1; min-width: 110px;">
+                        <label style="color: #f59e0b;">Qualidade:</label>
+                        <select id="filtro-qualidade" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                            <option value="">Todas</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Média">Média</option>
+                            <option value="Baixa">Baixa</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="filter-group">
-                    <label>Função:</label>
-                    <select id="filtro-funcao" class="filter-select" onchange="filtrarChips()">
-                        <option value="">Todas</option>
-                        <option value="Envios">Envios</option>
-                        <option value="Criador">Criador</option>
-                        <option value="Reserva">Reserva</option>
-                    </select>
+                <!-- Barra 2: Unnichat (Neon Verde) -->
+                <div class="neon-bar-verde">
+                    <div style="display: flex; align-items: center; gap: 6px; width: 100%; margin-bottom: 4px;">
+                        <span class="material-icons-round" style="font-size: 18px; color: #10b981;">filter_list</span>
+                        <b style="font-size: 13px; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">Filtros Unnichat</b>
+                        <button onclick="limparFiltrosUnnichat()" style="background: none; border: 1px solid rgba(16,185,129,0.3); color: #10b981; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: auto;">
+                            Limpar
+                        </button>
+                    </div>
+
+                    <div class="filter-group" style="flex: 1; min-width: 130px;">
+                        <label style="color: #10b981;">BM:</label>
+                        <input type="text" id="filtro-bm" class="filter-select" placeholder="Filtrar por BM..." oninput="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3); background-color: var(--bg-secundario); color: var(--texto-claro); padding: 5px 8px; border-radius: 4px; font-size: 12px; width: 100%;">
+                    </div>
+
+                    <div class="filter-group" style="flex: 1; min-width: 130px;">
+                        <label style="color: #10b981;">Target:</label>
+                        <input type="text" id="filtro-target" class="filter-select" placeholder="Filtrar por target..." oninput="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3); background-color: var(--bg-secundario); color: var(--texto-claro); padding: 5px 8px; border-radius: 4px; font-size: 12px; width: 100%;">
+                    </div>
                 </div>
 
-                <div class="filter-group">
-                    <label>Qualidade:</label>
-                    <select id="filtro-qualidade" class="filter-select" onchange="filtrarChips()">
-                        <option value="">Todas</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Média">Média</option>
-                        <option value="Baixa">Baixa</option>
-                    </select>
-                </div>
-
-                <button onclick="limparFiltrosChips()" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: auto;">
-                    Limpar Filtros
-                </button>
             </div>
 
-            <div class="equipe-card" style="padding: 0; overflow: hidden;">
-                <table>
-                    <thead style="background-color: var(--bg-secundario); user-select: none;">
-                        <tr>
-                            <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('nome')">
-                                <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
-                                    NOME (IDENTIFICAÇÃO) <span class="material-icons-round" id="icone-ordem-nome"
-                                        style="font-size: 16px;">sort</span>
-                                </div>
-                            </th>
-                            <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('numero')">
-                                <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
-                                    NÚMERO <span class="material-icons-round" id="icone-ordem-numero"
-                                        style="font-size: 16px;">sort</span>
-                                </div>
-                            </th>
-                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
-                                onclick="ordenarPor('atividade')">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
-                                    ATIVIDADE <span class="material-icons-round" id="icone-ordem-atividade"
-                                        style="font-size: 16px;">sort</span>
-                                </div>
-                            </th>
-                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
-                                onclick="ordenarPor('funcao')">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
-                                    FUNÇÃO <span class="material-icons-round" id="icone-ordem-funcao"
-                                        style="font-size: 16px;">sort</span>
-                                </div>
-                            </th>
-                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
-                                onclick="ordenarPor('qualidade')">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
-                                    QUALIDADE <span class="material-icons-round" id="icone-ordem-qualidade"
-                                        style="font-size: 16px;">sort</span>
-                                </div>
-                            </th>
-                            <th style="padding: 15px 20px; text-align: center; cursor: pointer;"
-                                onclick="ordenarPor('bans')">
-                                <div
-                                    style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
-                                    BANS <span class="material-icons-round" id="icone-ordem-bans"
-                                        style="font-size: 16px;">sort</span>
-                                </div>
-                            </th>
-                            <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-chips" style="padding: 0 20px;">
-                        <!-- Renderizado via JS -->
-                    </tbody>
-                </table>
+            <!-- TABELA 1: SENDFLOW (EXPANSÍVEL) -->
+            <div id="card-tabela-sendflow" class="equipe-card" style="padding: 0; overflow: hidden; margin-bottom: 0; border: 1px solid rgba(245, 158, 11, 0.4);">
+                <div class="tabela-colapsavel-header" onclick="alternarColapso('card-tabela-sendflow')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: #f59e0b; font-size: 24px;">cell_tower</span>
+                        <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números Sendflow</h3>
+                        <span id="badge-contador-sendflow" class="badge" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px;">0 números</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; color: var(--texto-muted);">Clique para expandir/recolher</span>
+                        <span class="material-icons-round chevron-toggle">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="tabela-corpo-wrapper">
+                    <table>
+                        <thead style="background-color: var(--bg-secundario); user-select: none;">
+                            <tr>
+                                <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('nome')">
+                                    <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
+                                        NOME (IDENTIFICAÇÃO) <span class="material-icons-round" id="icone-ordem-nome" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('numero')">
+                                    <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
+                                        NÚMERO <span class="material-icons-round" id="icone-ordem-numero" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('atividade')">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                        ATIVIDADE <span class="material-icons-round" id="icone-ordem-atividade" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('funcao')">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                        FUNÇÃO <span class="material-icons-round" id="icone-ordem-funcao" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('qualidade')">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                        QUALIDADE <span class="material-icons-round" id="icone-ordem-qualidade" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('bans')">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                        BANS <span class="material-icons-round" id="icone-ordem-bans" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-chips-sendflow">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- TABELA 2: UNNICHAT (EXPANSÍVEL) -->
+            <div id="card-tabela-unnichat" class="equipe-card" style="padding: 0; overflow: hidden; margin-bottom: 0; border: 1px solid rgba(16, 185, 129, 0.4);">
+                <div class="tabela-colapsavel-header" onclick="alternarColapso('card-tabela-unnichat')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: #10b981; font-size: 24px;">chat</span>
+                        <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números Unnichat</h3>
+                        <span id="badge-contador-unnichat" class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 11px;">0 números</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; color: var(--texto-muted);">Clique para expandir/recolher</span>
+                        <span class="material-icons-round chevron-toggle">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="tabela-corpo-wrapper">
+                    <table>
+                        <thead style="background-color: var(--bg-secundario); user-select: none;">
+                            <tr>
+                                <th style="padding: 15px 20px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
+                                <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: center;">BM</th>
+                                <th style="padding: 15px 20px; text-align: center;">TARGET</th>
+                                <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-chips-unnichat">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABELA 3: INTEGRAÇÕES API (EXPANSÍVEL) -->
+            <div id="card-tabela-api" class="equipe-card" style="padding: 0; overflow: hidden; margin-bottom: 0; border: 1px solid rgba(59, 130, 246, 0.4);">
+                <div class="tabela-colapsavel-header" onclick="alternarColapso('card-tabela-api')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: #3b82f6; font-size: 24px;">webhook</span>
+                        <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números de Integrações API</h3>
+                        <span id="badge-contador-api" class="badge" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); font-size: 11px;">0 números</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button onclick="event.stopPropagation(); abrirModalApi();" class="btn-add" style="font-size: 11px; padding: 4px 10px; background-color: #2563eb;">+ ADD API</button>
+                        <span class="material-icons-round chevron-toggle">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="tabela-corpo-wrapper">
+                    <table>
+                        <thead style="background-color: var(--bg-secundario);">
+                            <tr>
+                                <th style="padding: 15px 20px; width: 30%; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: left;">DESCRIÇÃO / FINALIDADE</th>
+                                <th style="padding: 15px 20px; text-align: right; width: 140px;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-api-body">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </section>
     </main>
 
-    <!-- Modal Completo de Cadastro/Edição -->
+    <!-- Modal Completo de Cadastro/Edição de Chip -->
     <div id="modal-chip" class="modal">
         <div class="modal-content" style="width: 600px;">
             <div class="modal-header">
@@ -140,60 +296,113 @@
             <form id="form-chip">
                 <input type="hidden" id="edit-id">
 
+                <!-- Seleção de Plataforma / Tipo -->
+                <div class="form-group" style="margin-bottom: 18px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--bordas);">
+                    <label style="color: var(--laranja-brabo); font-weight: 600; margin-bottom: 6px;">Plataforma do Chip</label>
+                    <select id="edit-plataforma" onchange="alternarCamposPlataforma()" style="font-weight: 600;">
+                        <option value="Sendflow">📡 Sendflow</option>
+                        <option value="Unnichat">💬 Unnichat</option>
+                    </select>
+                </div>
+
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Nome (Identificação)</label>
                         <input type="text" id="edit-nome" placeholder="Ex: MKT 90 (C)" required>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="grid-column: span 2;">
                         <label>Número do Celular</label>
                         <input type="text" id="edit-numero" placeholder="Ex: (16) 99187-6538" maxlength="15"
                             oninput="aplicarMascara(this)" required>
                     </div>
-                    <div class="form-group">
-                        <label>Atividade / Status</label>
-                        <select id="edit-num-atividade">
-                            <option value="Disponível">Disponível</option>
-                            <option value="Em Análise">Em Análise</option>
-                            <option value="Reconectar">Reconectar</option>
-                            <option value="Banido">Banido</option>
-                        </select>
+
+                    <!-- CAMPOS ESPECÍFICOS DO SENDFLOW -->
+                    <div id="campos-sendflow" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Atividade / Status</label>
+                            <select id="edit-num-atividade">
+                                <option value="Disponível">Disponível</option>
+                                <option value="Em Análise">Em Análise</option>
+                                <option value="Reconectar">Reconectar</option>
+                                <option value="Banido">Banido</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Função</label>
+                            <select id="edit-funcao">
+                                <option value="Envios">Envios</option>
+                                <option value="Criador">Criador</option>
+                                <option value="Reserva">Reserva</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Qualidade do Nº</label>
+                            <select id="edit-qualidade">
+                                <option value="Alta">Alta</option>
+                                <option value="Média">Média</option>
+                                <option value="Baixa">Baixa</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Total de Bans (Automático)</label>
+                            <input type="number" id="edit-bans" readonly style="opacity: 0.8; cursor: not-allowed; background-color: rgba(0,0,0,0.3);">
+                        </div>
+
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Juízo Final (Opcional)</label>
+                            <input type="text" id="edit-juizo" placeholder="Observações...">
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Função</label>
-                        <select id="edit-funcao">
-                            <option value="Envios">Envios</option>
-                            <option value="Criador">Criador</option>
-                            <option value="Reserva">Reserva</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Total de Bans (Automático)</label>
-                        <input type="number" id="edit-bans" readonly style="opacity: 0.8; cursor: not-allowed; background-color: rgba(0,0,0,0.3);">
-                        <small style="color: var(--texto-muted); font-size: 11px; margin-top: 3px; display: block;">
-                            * Incrementado automaticamente ao salvar como <b>Banido</b>.
-                        </small>
-                    </div>
+                    <!-- CAMPOS ESPECÍFICOS DO UNNICHAT -->
+                    <div id="campos-unnichat" style="grid-column: span 2; display: none; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>BM (Business Manager)</label>
+                            <input type="text" id="edit-bm" placeholder="Ex: BM 01, BM Principal...">
+                        </div>
 
-                    <div class="form-group">
-                        <label>Qualidade do Nº</label>
-                        <select id="edit-qualidade">
-                            <option value="Alta">Alta</option>
-                            <option value="Média">Média</option>
-                            <option value="Baixa">Baixa</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Juízo Final</label>
-                        <input type="text" id="edit-juizo" placeholder="Opcional...">
+                        <div class="form-group">
+                            <label>Target / Alvo</label>
+                            <input type="text" id="edit-target" placeholder="Ex: Campanha X, Leads VIP...">
+                        </div>
                     </div>
                 </div>
 
                 <div class="modal-footer" style="margin-top: 25px;">
                     <button type="button" class="btn-cancelar" onclick="fecharModalChip()">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de API -->
+    <div id="modal-api" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h3 id="modal-titulo-api">Adicionar Número API</h3>
+                <span class="close-btn" onclick="fecharModalApi()">&times;</span>
+            </div>
+            <form id="form-api">
+                <input type="hidden" id="edit-api-id">
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Número</label>
+                    <input type="text" id="edit-api-numero" placeholder="Ex: (99) 99999-9999" maxlength="15" oninput="aplicarMascara(this)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição / Finalidade</label>
+                    <input type="text" id="edit-api-desc" placeholder="Ex: IA ChatGPT, Webhook Typebot" required>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 25px;">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalApi()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Vínculo</button>
                 </div>
             </form>
         </div>

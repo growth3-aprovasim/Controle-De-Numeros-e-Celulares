@@ -1,15 +1,30 @@
 // js/script-celulares.js
 
 let listaChips = []; 
+let listaApi = [];
 let colunaAtual = 'nome';
 let ordemCrescente = true; 
 
 async function carregarDadosDoBanco() {
-    listaChips = (await DB.numerosControle.listar()) || [];
-    ordenarPor(colunaAtual, true);
+    try {
+        listaChips = (await DB.numerosControle.listar()) || [];
+        listaApi = (await DB.apiNumeros.listar()) || [];
+        ordenarPor(colunaAtual, true);
+        renderizarTabelaApi();
+    } catch (erro) {
+        console.error("Erro ao carregar dados dos chips/API:", erro);
+    }
 }
 
-// --- ORDENAÇÃO INTELIGENTE PARA TODAS AS COLUNAS ---
+// --- CONTROLE DE COLAPSO / EXPANSÃO DAS TABELAS ---
+function alternarColapso(idElemento) {
+    const card = document.getElementById(idElemento);
+    if (card) {
+        card.classList.toggle('colapsado');
+    }
+}
+
+// --- ORDENAÇÃO INTELIGENTE PARA TODAS AS COLUNAS DO SENDFLOW ---
 function ordenarPor(coluna, manterDirecao = false) {
     if (!manterDirecao) {
         if (colunaAtual === coluna) {
@@ -54,7 +69,7 @@ function ordenarPor(coluna, manterDirecao = false) {
     });
 
     atualizarIconesOrdenacao();
-    filtrarChips(); 
+    filtrarTodosChips(); 
 }
 
 function atualizarIconesOrdenacao() {
@@ -113,11 +128,12 @@ function obterClasseQualidade(qualidade) {
     }
 }
 
-// --- FILTRO AVANÇADO E BUSCA INTELIGENTE ---
-function filtrarChips() {
+// --- FILTRO AVANÇADO UNIFICADO ---
+function filtrarTodosChips() {
     const inputFiltro = document.getElementById('input-filtro-chips');
     const termo = inputFiltro ? inputFiltro.value.toLowerCase().trim() : '';
 
+    // Filtros Sendflow
     const selStatus = document.getElementById('filtro-status');
     const statusVal = selStatus ? selStatus.value : '';
 
@@ -127,13 +143,22 @@ function filtrarChips() {
     const selQualidade = document.getElementById('filtro-qualidade');
     const qualidadeVal = selQualidade ? selQualidade.value : '';
 
-    const chipsFiltrados = listaChips.filter(item => {
-        // Filtro por dropdowns
+    // Filtros Unnichat
+    const inputBm = document.getElementById('filtro-bm');
+    const bmVal = inputBm ? inputBm.value.toLowerCase().trim() : '';
+
+    const inputTarget = document.getElementById('filtro-target');
+    const targetVal = inputTarget ? inputTarget.value.toLowerCase().trim() : '';
+
+    // Separar chips por plataforma
+    const chipsSendflow = listaChips.filter(item => {
+        const isUnnichat = item.plataforma === 'Unnichat' || item.equipe === 'UNNICHAT';
+        if (isUnnichat) return false;
+
         if (statusVal && item.atividade !== statusVal) return false;
         if (funcaoVal && item.funcao !== funcaoVal) return false;
         if (qualidadeVal && item.qualidade !== qualidadeVal) return false;
 
-        // Busca textual inteligente (nome, telefone, atividade, função, juízo)
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
             const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
@@ -148,29 +173,66 @@ function filtrarChips() {
         return true;
     });
 
-    renderizarChips(chipsFiltrados);
+    const chipsUnnichat = listaChips.filter(item => {
+        const isUnnichat = item.plataforma === 'Unnichat' || item.equipe === 'UNNICHAT';
+        if (!isUnnichat) return false;
+
+        if (bmVal && (!item.bm || !item.bm.toLowerCase().includes(bmVal))) return false;
+        if (targetVal && (!item.target || !item.target.toLowerCase().includes(targetVal))) return false;
+
+        if (termo) {
+            const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
+            const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchBm = item.bm && item.bm.toLowerCase().includes(termo);
+            const matchTarget = item.target && item.target.toLowerCase().includes(termo);
+            if (!matchNome && !matchNumero && !matchBm && !matchTarget) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Filtro para API
+    const apiFiltrados = listaApi.filter(item => {
+        if (!termo) return true;
+        return (item.numero && item.numero.toLowerCase().includes(termo)) ||
+               (item.descricao && item.descricao.toLowerCase().includes(termo));
+    });
+
+    renderizarTabelaSendflow(chipsSendflow);
+    renderizarTabelaUnnichat(chipsUnnichat);
+    renderizarTabelaApi(apiFiltrados);
 }
 
-function limparFiltrosChips() {
-    if (document.getElementById('input-filtro-chips')) document.getElementById('input-filtro-chips').value = '';
+function limparFiltrosSendflow() {
     if (document.getElementById('filtro-status')) document.getElementById('filtro-status').value = '';
     if (document.getElementById('filtro-funcao')) document.getElementById('filtro-funcao').value = '';
     if (document.getElementById('filtro-qualidade')) document.getElementById('filtro-qualidade').value = '';
-    filtrarChips();
+    filtrarTodosChips();
 }
 
-// --- RENDERIZAÇÃO DA TABELA DE CHIPS ---
-function renderizarChips(dadosParaRenderizar) {
-    const tbody = document.getElementById('tabela-chips');
+function limparFiltrosUnnichat() {
+    if (document.getElementById('filtro-bm')) document.getElementById('filtro-bm').value = '';
+    if (document.getElementById('filtro-target')) document.getElementById('filtro-target').value = '';
+    filtrarTodosChips();
+}
+
+// --- RENDERIZAÇÃO DA TABELA SENDFLOW ---
+function renderizarTabelaSendflow(dados) {
+    const tbody = document.getElementById('tabela-chips-sendflow');
+    const badgeContador = document.getElementById('badge-contador-sendflow');
+    if (badgeContador) badgeContador.innerText = `${dados.length} números`;
     if (!tbody) return;
+
     tbody.innerHTML = '';
 
-    if (dadosParaRenderizar.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip encontrado com os filtros selecionados.</td></tr>`;
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip Sendflow encontrado.</td></tr>`;
         return;
     }
 
-    dadosParaRenderizar.forEach(chip => {
+    dados.forEach(chip => {
         let classAtiv = obterClasseAtividade(chip.atividade);
         let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
         let classQual = obterClasseQualidade(chip.qualidade);
@@ -199,9 +261,97 @@ function renderizarChips(dadosParaRenderizar) {
     });
 }
 
-// --- MODAL DE EDIÇÃO / CADASTRO COM INCREMENTO AUTOMÁTICO DE BANS ---
+// --- RENDERIZAÇÃO DA TABELA UNNICHAT ---
+function renderizarTabelaUnnichat(dados) {
+    const tbody = document.getElementById('tabela-chips-unnichat');
+    const badgeContador = document.getElementById('badge-contador-unnichat');
+    if (badgeContador) badgeContador.innerText = `${dados.length} números`;
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip Unnichat encontrado.</td></tr>`;
+        return;
+    }
+
+    dados.forEach(chip => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
+            <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;">
+                <span class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">
+                    ${chip.bm || 'Sem BM'}
+                </span>
+            </td>
+            <td style="padding: 15px 20px; text-align: center;">
+                <span class="badge" style="background-color: rgba(255, 255, 255, 0.05); color: var(--texto-claro); border: 1px solid var(--bordas);">
+                    ${chip.target || 'Geral'}
+                </span>
+            </td>
+            <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn-icon" title="Editar" onclick="abrirModalChip(${chip.id})">
+                    <span class="material-icons-round">edit</span>
+                </button>
+                <button class="btn-icon" title="Remover" onclick="removerChip(${chip.id})" style="color: #ef4444;">
+                    <span class="material-icons-round">delete</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- RENDERIZAÇÃO DA TABELA API ---
+function renderizarTabelaApi(dados = listaApi) {
+    const tbody = document.getElementById('tabela-api-body');
+    const badgeContador = document.getElementById('badge-contador-api');
+    if (badgeContador) badgeContador.innerText = `${dados.length} números`;
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--texto-muted); padding: 20px;">Nenhum número de API cadastrado.</td></tr>`;
+        return;
+    }
+
+    dados.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding: 12px 20px; font-weight: 500; font-family: monospace; font-size: 14px; color: #60a5fa;">${item.numero}</td>
+            <td style="padding: 12px 20px; color: var(--texto-claro);">${item.descricao}</td>
+            <td style="padding: 12px 20px; text-align: right;">
+                <button class="btn-icon" title="Editar" onclick="abrirModalApi(${item.id})">
+                    <span class="material-icons-round">edit</span>
+                </button>
+                <button class="btn-icon" title="Excluir" onclick="excluirApi(${item.id})" style="color: #ef4444;">
+                    <span class="material-icons-round">delete</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- CONTROLE DOS CAMPOS DINÂMICOS DO MODAL ---
+function alternarCamposPlataforma() {
+    const plat = document.getElementById('edit-plataforma').value;
+    const boxSendflow = document.getElementById('campos-sendflow');
+    const boxUnnichat = document.getElementById('campos-unnichat');
+
+    if (plat === 'Unnichat') {
+        if (boxSendflow) boxSendflow.style.display = 'none';
+        if (boxUnnichat) boxUnnichat.style.display = 'grid';
+    } else {
+        if (boxSendflow) boxSendflow.style.display = 'grid';
+        if (boxUnnichat) boxUnnichat.style.display = 'none';
+    }
+}
+
 function configurarSelectAtividade(valorAtual = 'Disponível') {
-    const elAtividade = document.getElementById('edit-atividade') || document.getElementById('edit-num-atividade');
+    const elAtividade = document.getElementById('edit-num-atividade');
     if (!elAtividade) return;
 
     elAtividade.innerHTML = '';
@@ -230,49 +380,46 @@ function abrirModalChip(id = null) {
         const chip = listaChips.find(c => c.id === chipId || c.id === id);
         if (!chip) return;
 
+        const plat = chip.plataforma === 'Unnichat' || chip.equipe === 'UNNICHAT' ? 'Unnichat' : 'Sendflow';
+
         if (document.getElementById('edit-id')) document.getElementById('edit-id').value = chip.id;
+        if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = plat;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = chip.nome || '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = chip.numero || '';
         
+        // Campos Sendflow
         configurarSelectAtividade(chip.atividade || 'Disponível');
-
-        const elFuncao = document.getElementById('edit-funcao');
-        if (elFuncao) elFuncao.value = chip.funcao || 'Envios';
-
-        const elBans = document.getElementById('edit-bans');
-        if (elBans) elBans.value = chip.bans !== undefined ? chip.bans : 0;
-
-        const elQualidade = document.getElementById('edit-qualidade');
-        if (elQualidade) elQualidade.value = chip.qualidade || 'Alta';
-
-        const elJuizo = document.getElementById('edit-juizo');
-        if (elJuizo) elJuizo.value = chip.juizo || '';
+        if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = chip.funcao || 'Envios';
+        if (document.getElementById('edit-bans')) document.getElementById('edit-bans').value = chip.bans !== undefined ? chip.bans : 0;
+        if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = chip.qualidade || 'Alta';
+        if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = chip.juizo || '';
         
+        // Campos Unnichat
+        if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = chip.bm || '';
+        if (document.getElementById('edit-target')) document.getElementById('edit-target').value = chip.target || '';
+
         const titulo = document.getElementById('modal-titulo');
-        if (titulo) titulo.innerText = 'Editar Número';
+        if (titulo) titulo.innerText = `Editar Número (${plat})`;
     } else {
         if (document.getElementById('edit-id')) document.getElementById('edit-id').value = '';
+        if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = 'Sendflow';
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = '';
         
         configurarSelectAtividade('Disponível');
-
-        const elFuncao = document.getElementById('edit-funcao');
-        if (elFuncao) elFuncao.value = 'Envios';
-
-        const elBans = document.getElementById('edit-bans');
-        if (elBans) elBans.value = '0';
-
-        const elQualidade = document.getElementById('edit-qualidade');
-        if (elQualidade) elQualidade.value = 'Alta';
-
-        const elJuizo = document.getElementById('edit-juizo');
-        if (elJuizo) elJuizo.value = '';
+        if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = 'Envios';
+        if (document.getElementById('edit-bans')) document.getElementById('edit-bans').value = '0';
+        if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = 'Alta';
+        if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = '';
         
+        if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = '';
+        if (document.getElementById('edit-target')) document.getElementById('edit-target').value = '';
+
         const titulo = document.getElementById('modal-titulo');
         if (titulo) titulo.innerText = 'Adicionar Novo Número';
     }
 
+    alternarCamposPlataforma();
     const modal = document.getElementById('modal-chip');
     if (modal) modal.style.display = 'flex';
 }
@@ -288,15 +435,19 @@ if (formChip) {
         e.preventDefault(); 
         
         const idValue = document.getElementById('edit-id') ? document.getElementById('edit-id').value : '';
+        const plataformaForm = document.getElementById('edit-plataforma') ? document.getElementById('edit-plataforma').value : 'Sendflow';
         const nomeForm = document.getElementById('edit-nome') ? document.getElementById('edit-nome').value.trim() : '';
         const numeroForm = document.getElementById('edit-numero') ? document.getElementById('edit-numero').value.trim() : '';
         
-        const selectAtividade = document.getElementById('edit-atividade') || document.getElementById('edit-num-atividade');
+        const selectAtividade = document.getElementById('edit-num-atividade');
         const atividadeForm = selectAtividade ? selectAtividade.value : 'Disponível';
 
         const funcaoForm = document.getElementById('edit-funcao') ? document.getElementById('edit-funcao').value : 'Envios';
         const qualidadeForm = document.getElementById('edit-qualidade') ? document.getElementById('edit-qualidade').value : 'Alta';
         const juizoForm = document.getElementById('edit-juizo') ? document.getElementById('edit-juizo').value.trim() : '';
+
+        const bmForm = document.getElementById('edit-bm') ? document.getElementById('edit-bm').value.trim() : '';
+        const targetForm = document.getElementById('edit-target') ? document.getElementById('edit-target').value.trim() : '';
 
         const idAtual = idValue === '' ? null : Number(idValue);
 
@@ -316,9 +467,7 @@ if (formChip) {
         let chipExistente = idAtual !== null ? listaChips.find(c => c.id === idAtual) : null;
         let bansCalculados = chipExistente ? (chipExistente.bans || 0) : 0;
 
-        // INCREMENTO AUTOMÁTICO DE BANS:
-        // Se mudou para Banido e antes não era Banido -> soma +1
-        if (atividadeForm === 'Banido') {
+        if (plataformaForm === 'Sendflow' && atividadeForm === 'Banido') {
             if (!chipExistente || chipExistente.atividade !== 'Banido') {
                 bansCalculados += 1;
             }
@@ -328,14 +477,17 @@ if (formChip) {
 
         const itemAtualizado = await DB.numerosControle.salvar({
             id: idAtual,
-            equipe: "📌 GERAL",
+            equipe: plataformaForm === 'Unnichat' ? 'UNNICHAT' : 'SENDFLOW',
+            plataforma: plataformaForm,
             nome: nomeForm,
             numero: numeroForm,
-            atividade: atividadeForm,
-            funcao: funcaoForm,
+            atividade: plataformaForm === 'Unnichat' ? 'Disponível' : atividadeForm,
+            funcao: plataformaForm === 'Unnichat' ? 'Envios' : funcaoForm,
             bans: bansCalculados,
             qualidade: qualidadeForm,
             juizo: juizoForm,
+            bm: bmForm,
+            target: targetForm,
             statusEquipe: "Disponível",
             expert: ["Mateus"]
         });
@@ -349,7 +501,7 @@ if (formChip) {
             }
         }
 
-        filtrarChips();
+        await carregarDadosDoBanco();
     });
 }
 
@@ -363,7 +515,7 @@ async function removerChip(id) {
             const sucesso = await DB.numerosControle.deletar(chipId);
             if (sucesso !== false) {
                 listaChips = listaChips.filter(n => n.id !== chipId && n.id !== id);
-                filtrarChips();
+                filtrarTodosChips();
             } else {
                 alert("Erro ao excluir o número do banco de dados.");
             }
@@ -373,6 +525,58 @@ async function removerChip(id) {
         }
         await carregarDadosDoBanco();
     }
+}
+
+// --- FUNÇÕES DE API ---
+function abrirModalApi(id = null) {
+    if (id) {
+        const item = listaApi.find(a => a.id === id);
+        if (!item) return;
+
+        document.getElementById('modal-titulo-api').innerText = 'Editar Número API';
+        document.getElementById('edit-api-id').value = item.id;
+        document.getElementById('edit-api-numero').value = item.numero;
+        document.getElementById('edit-api-desc').value = item.descricao;
+    } else {
+        document.getElementById('modal-titulo-api').innerText = 'Adicionar Número API';
+        document.getElementById('edit-api-id').value = '';
+        document.getElementById('edit-api-numero').value = '';
+        document.getElementById('edit-api-desc').value = '';
+    }
+
+    document.getElementById('modal-api').style.display = 'flex';
+}
+
+function fecharModalApi() {
+    document.getElementById('modal-api').style.display = 'none';
+}
+
+async function excluirApi(id) {
+    if (confirm("Tem certeza que deseja excluir este número das integrações de API?")) {
+        await DB.apiNumeros.deletar(id);
+        await carregarDadosDoBanco();
+    }
+}
+
+const formApi = document.getElementById('form-api');
+if (formApi) {
+    formApi.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const idValue = document.getElementById('edit-api-id').value;
+        const idAtual = idValue === '' ? null : parseInt(idValue);
+        const numeroForm = document.getElementById('edit-api-numero').value.trim();
+        const descForm = document.getElementById('edit-api-desc').value.trim();
+
+        await DB.apiNumeros.salvar({
+            id: idAtual,
+            numero: numeroForm,
+            descricao: descForm
+        });
+
+        fecharModalApi();
+        await carregarDadosDoBanco();
+    });
 }
 
 // --- MODAL DE HISTÓRICO COMPLETO DO CHIP ---
@@ -459,7 +663,7 @@ async function abrirHistoricoChip(id) {
                 const grp = reg.grupo;
 
                 let corStatus = camp.status === 'Em Andamento' ? '#10b981' : (camp.status === 'Encerrada' ? '#6b7280' : '#3b82f6');
-                let badgeGrupo = grp === 'VIP' ? `<span class="badge badge-vip">⭐ GRUPO VIP</span>` : (grp === 'AMBOS' ? `<span class="badge badge-ambos">🔄 AMBOS</span>` : `<span class="badge badge-normal">📱 NORMAL</span>`);
+                let badgeGrupo = grp === 'VIP' ? `<span class="badge badge-vip">⭐ GRUPO VIP</span>` : (grp === 'AMBOS' ? `<span class="badge badge-ambos">👑 AMBOS</span>` : `<span class="badge badge-normal">📱 NORMAL</span>`);
 
                 const cardCamp = document.createElement('div');
                 cardCamp.style.cssText = `

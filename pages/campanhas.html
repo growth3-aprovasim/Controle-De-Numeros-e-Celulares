@@ -27,6 +27,37 @@
         </div>
 
         <section class="dashboard-area">
+            <!-- Barra de Filtros de Campanhas -->
+            <div class="filter-bar" style="margin-bottom: 20px;">
+                <div class="filter-group">
+                    <span class="material-icons-round" style="font-size: 16px; color: var(--laranja-brabo);">person</span>
+                    <label>Expert:</label>
+                    <select id="filtro-expert-camp" class="filter-select" onchange="filtrarCampanhas()">
+                        <option value="">Todos</option>
+                        <option value="Mateus">Mateus</option>
+                        <option value="Ivan">Ivan</option>
+                        <option value="Graton">Graton</option>
+                        <option value="Black">Black</option>
+                        <option value="Geral">Geral</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <span class="material-icons-round" style="font-size: 16px; color: var(--laranja-brabo);">flag</span>
+                    <label>Status:</label>
+                    <select id="filtro-status-camp" class="filter-select" onchange="filtrarCampanhas()">
+                        <option value="">Todos</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Agendada">Agendada</option>
+                        <option value="Encerrada">Encerrada</option>
+                    </select>
+                </div>
+
+                <button onclick="limparFiltrosCampanhas()" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: auto;">
+                    Limpar Filtros
+                </button>
+            </div>
+
             <div id="grid-campanhas" style="display: flex; flex-direction: column; gap: 25px;">
                 <!-- Renderizado via JS -->
             </div>
