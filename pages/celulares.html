@@ -152,12 +152,16 @@
 
                     <div class="filter-group" style="flex: 1; min-width: 130px;">
                         <label style="color: #10b981;">BM:</label>
-                        <input type="text" id="filtro-bm" class="filter-select" placeholder="Filtrar por BM..." oninput="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3); background-color: var(--bg-secundario); color: var(--texto-claro); padding: 5px 8px; border-radius: 4px; font-size: 12px; width: 100%;">
+                        <select id="filtro-bm" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
+                            <option value="">Todas</option>
+                        </select>
                     </div>
 
                     <div class="filter-group" style="flex: 1; min-width: 130px;">
                         <label style="color: #10b981;">Target:</label>
-                        <input type="text" id="filtro-target" class="filter-select" placeholder="Filtrar por target..." oninput="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3); background-color: var(--bg-secundario); color: var(--texto-claro); padding: 5px 8px; border-radius: 4px; font-size: 12px; width: 100%;">
+                        <select id="filtro-target" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
+                            <option value="">Todas</option>
+                        </select>
                     </div>
                 </div>
 

@@ -290,6 +290,10 @@ function renderizarCheckboxesNumeros() {
     const funcaoFiltro = selectFuncao ? selectFuncao.value : '';
 
     const numerosExibicao = listaNumerosGeral.filter(n => {
+        // Apenas números do Sendflow podem ser atribuídos em campanhas (excluir Unnichat)
+        const isUnnichat = n.plataforma === 'Unnichat' || n.equipe === 'UNNICHAT' || n.equipe === 'Unnichat';
+        if (isUnnichat) return false;
+
         if (funcaoFiltro && n.funcao !== funcaoFiltro) return false;
         if (!termo) return true;
         return (n.nome && n.nome.toLowerCase().includes(termo)) ||

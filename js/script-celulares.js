@@ -7,9 +7,45 @@ let ordemCrescente = true;
 async function carregarDadosDoBanco() {
     try {
         listaChips = (await DB.numerosControle.listar()) || [];
+        atualizarDropdownsFiltroUnnichat();
         ordenarPor(colunaAtual, true);
     } catch (erro) {
         console.error("Erro ao carregar dados dos chips:", erro);
+    }
+}
+
+// --- POPULA DINAMICAMENTE OS DROPDOWNS DE BM E TARGET COM AS OPÇÕES CADASTRADAS ---
+function atualizarDropdownsFiltroUnnichat() {
+    const selBm = document.getElementById('filtro-bm');
+    const selTarget = document.getElementById('filtro-target');
+
+    const chipsUnnichat = listaChips.filter(c => c.plataforma === 'Unnichat' || c.equipe === 'UNNICHAT');
+
+    const bms = Array.from(new Set(chipsUnnichat.map(c => c.bm && c.bm.trim()).filter(Boolean))).sort();
+    const targets = Array.from(new Set(chipsUnnichat.map(c => c.target && c.target.trim()).filter(Boolean))).sort();
+
+    if (selBm) {
+        const valAtual = selBm.value;
+        selBm.innerHTML = '<option value="">Todas</option>';
+        bms.forEach(bm => {
+            const opt = document.createElement('option');
+            opt.value = bm;
+            opt.innerText = bm;
+            selBm.appendChild(opt);
+        });
+        selBm.value = bms.includes(valAtual) ? valAtual : '';
+    }
+
+    if (selTarget) {
+        const valAtual = selTarget.value;
+        selTarget.innerHTML = '<option value="">Todas</option>';
+        targets.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.innerText = t;
+            selTarget.appendChild(opt);
+        });
+        selTarget.value = targets.includes(valAtual) ? valAtual : '';
     }
 }
 
@@ -140,12 +176,12 @@ function filtrarTodosChips() {
     const selQualidade = document.getElementById('filtro-qualidade');
     const qualidadeVal = selQualidade ? selQualidade.value : '';
 
-    // Filtros Unnichat
-    const inputBm = document.getElementById('filtro-bm');
-    const bmVal = inputBm ? inputBm.value.toLowerCase().trim() : '';
+    // Filtros Unnichat (Dropdowns com seleção rápida)
+    const selBm = document.getElementById('filtro-bm');
+    const bmVal = selBm ? selBm.value.toLowerCase().trim() : '';
 
-    const inputTarget = document.getElementById('filtro-target');
-    const targetVal = inputTarget ? inputTarget.value.toLowerCase().trim() : '';
+    const selTarget = document.getElementById('filtro-target');
+    const targetVal = selTarget ? selTarget.value.toLowerCase().trim() : '';
 
     // Separar chips por plataforma
     const chipsSendflow = listaChips.filter(item => {
@@ -174,8 +210,8 @@ function filtrarTodosChips() {
         const isUnnichat = item.plataforma === 'Unnichat' || item.equipe === 'UNNICHAT';
         if (!isUnnichat) return false;
 
-        if (bmVal && (!item.bm || !item.bm.toLowerCase().includes(bmVal))) return false;
-        if (targetVal && (!item.target || !item.target.toLowerCase().includes(targetVal))) return false;
+        if (bmVal && (!item.bm || item.bm.toLowerCase().trim() !== bmVal)) return false;
+        if (targetVal && (!item.target || item.target.toLowerCase().trim() !== targetVal)) return false;
 
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);

@@ -112,77 +112,127 @@ function renderizarCampanhasDashboard(campanhas, todosNumeros) {
         card.style.borderColor = 'var(--laranja-brabo)';
         card.style.marginBottom = '0';
 
-        // Renderização dos quadradinhos / cards de cada número
+        // Renderização dos quadradinhos / cards organizados em 3 LINHAS:
+        // Linha 1: Números VIP
+        // Linha 2: Números AMBOS (VIP + Normal)
+        // Linha 3: Números NORMAL
         let chipsGridHTML = '';
 
         if (totalNumsCampanha === 0) {
             chipsGridHTML = `<div style="color: var(--texto-muted); font-size: 13px; padding: 15px 0;">Nenhum número alocado para esta campanha ainda.</div>`;
         } else {
-            chipsGridHTML = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 15px;">`;
-            
-            chipsDetalhados.forEach(item => {
-                const chip = item.num;
-                const grp = item.grupo;
+            const chipsVip = chipsDetalhados.filter(c => c.grupo === 'VIP');
+            const chipsAmbos = chipsDetalhados.filter(c => c.grupo === 'AMBOS');
+            const chipsNormal = chipsDetalhados.filter(c => c.grupo === 'NORMAL');
 
-                // Cores dinâmicas da caixa baseadas na atividade do chip (Em Uso = Verde, Em Análise = Amarelo, Banido = Vermelho, Reconectar = Roxo)
-                let borderStyle = '1px solid rgba(255, 255, 255, 0.08)';
-                let bgCard = 'rgba(255, 255, 255, 0.02)';
-                let corAtividade = '#94a3b8';
-                let ativ = chip.atividade || 'Disponível';
+            function gerarGridCards(lista) {
+                let html = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">`;
+                lista.forEach(item => {
+                    const chip = item.num;
+                    const grp = item.grupo;
 
-                if (ativ === 'Em Uso') {
-                    borderStyle = '1px solid rgba(16, 185, 129, 0.6)';
-                    bgCard = 'rgba(16, 185, 129, 0.10)';
-                    corAtividade = '#10b981';
-                } else if (ativ === 'Em Análise') {
-                    borderStyle = '1px solid rgba(245, 158, 11, 0.6)';
-                    bgCard = 'rgba(245, 158, 11, 0.10)';
-                    corAtividade = '#f59e0b';
-                } else if (ativ === 'Banido') {
-                    borderStyle = '1px solid rgba(239, 68, 68, 0.6)';
-                    bgCard = 'rgba(239, 68, 68, 0.10)';
-                    corAtividade = '#ef4444';
-                } else if (ativ === 'Reconectar') {
-                    borderStyle = '1px solid rgba(168, 85, 247, 0.6)';
-                    bgCard = 'rgba(168, 85, 247, 0.10)';
-                    corAtividade = '#a855f7';
-                } else {
-                    borderStyle = '1px solid rgba(59, 130, 246, 0.4)';
-                    bgCard = 'rgba(59, 130, 246, 0.05)';
-                    corAtividade = '#60a5fa';
-                }
+                    let borderStyle = '1px solid rgba(255, 255, 255, 0.08)';
+                    let bgCard = 'rgba(255, 255, 255, 0.02)';
+                    let corAtividade = '#94a3b8';
+                    let ativ = chip.atividade || 'Disponível';
 
-                let badgeGrupoHTML = `<span class="badge badge-normal" style="font-size: 10px; padding: 2px 6px;">📱 Normal</span>`;
-                if (grp === 'VIP') {
-                    badgeGrupoHTML = `<span class="badge badge-vip" style="font-size: 10px; padding: 2px 6px;">⭐ VIP</span>`;
-                } else if (grp === 'AMBOS') {
-                    badgeGrupoHTML = `<span class="badge badge-ambos" style="font-size: 10px; padding: 2px 6px;">👑 Ambos</span>`;
-                }
+                    if (ativ === 'Em Uso') {
+                        borderStyle = '1px solid rgba(16, 185, 129, 0.6)';
+                        bgCard = 'rgba(16, 185, 129, 0.10)';
+                        corAtividade = '#10b981';
+                    } else if (ativ === 'Em Análise') {
+                        borderStyle = '1px solid rgba(245, 158, 11, 0.6)';
+                        bgCard = 'rgba(245, 158, 11, 0.10)';
+                        corAtividade = '#f59e0b';
+                    } else if (ativ === 'Banido') {
+                        borderStyle = '1px solid rgba(239, 68, 68, 0.6)';
+                        bgCard = 'rgba(239, 68, 68, 0.10)';
+                        corAtividade = '#ef4444';
+                    } else if (ativ === 'Reconectar') {
+                        borderStyle = '1px solid rgba(168, 85, 247, 0.6)';
+                        bgCard = 'rgba(168, 85, 247, 0.10)';
+                        corAtividade = '#a855f7';
+                    } else {
+                        borderStyle = '1px solid rgba(59, 130, 246, 0.4)';
+                        bgCard = 'rgba(59, 130, 246, 0.05)';
+                        corAtividade = '#60a5fa';
+                    }
 
-                let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
+                    let badgeGrupoHTML = `<span class="badge badge-normal" style="font-size: 10px; padding: 2px 6px;">📱 Normal</span>`;
+                    if (grp === 'VIP') {
+                        badgeGrupoHTML = `<span class="badge badge-vip" style="font-size: 10px; padding: 2px 6px;">⭐ VIP</span>`;
+                    } else if (grp === 'AMBOS') {
+                        badgeGrupoHTML = `<span class="badge badge-ambos" style="font-size: 10px; padding: 2px 6px;">👑 Ambos</span>`;
+                    }
 
-                chipsGridHTML += `
-                    <div style="background-color: ${bgCard}; border: ${borderStyle}; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <b style="font-size: 13px; color: var(--texto-claro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${chip.nome}">${chip.nome}</b>
-                            ${badgeGrupoHTML}
+                    let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
+
+                    html += `
+                        <div style="background-color: ${bgCard}; border: ${borderStyle}; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <b style="font-size: 13px; color: var(--texto-claro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${chip.nome}">${chip.nome}</b>
+                                ${badgeGrupoHTML}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 11px; color: var(--texto-muted);">${chip.numero}</span>
+                                <span style="font-size: 10px; font-weight: 600; color: ${corAtividade}; display: flex; align-items: center; gap: 3px;">
+                                    <span style="width: 6px; height: 6px; border-radius: 50%; background-color: ${corAtividade}; display: inline-block;"></span>
+                                    ${ativ}
+                                </span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px;">
+                                <span class="badge ${classFunc}" style="font-size: 9px; padding: 2px 5px;">${chip.funcao || 'Reserva'}</span>
+                                <span style="font-size: 10px; color: var(--texto-muted);">Bans: <b style="color: ${chip.bans > 0 ? '#ef4444' : 'var(--texto-claro)'}">${chip.bans || 0}</b></span>
+                            </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 11px; color: var(--texto-muted);">${chip.numero}</span>
-                            <span style="font-size: 10px; font-weight: 600; color: ${corAtividade}; display: flex; align-items: center; gap: 3px;">
-                                <span style="width: 6px; height: 6px; border-radius: 50%; background-color: ${corAtividade}; display: inline-block;"></span>
-                                ${ativ}
-                            </span>
+                    `;
+                });
+                html += `</div>`;
+                return html;
+            }
+
+            let linhasHTML = '';
+
+            // LINHA 1: VIP
+            if (chipsVip.length > 0) {
+                linhasHTML += `
+                    <div style="margin-top: 15px; padding: 12px; background: rgba(245, 158, 11, 0.03); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <span class="badge badge-vip" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">⭐ 1ª LINHA: NÚMEROS NO VIP</span>
+                            <span style="font-size: 12px; color: var(--texto-muted);">(${chipsVip.length} números)</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px;">
-                            <span class="badge ${classFunc}" style="font-size: 9px; padding: 2px 5px;">${chip.funcao || 'Reserva'}</span>
-                            <span style="font-size: 10px; color: var(--texto-muted);">Bans: <b style="color: ${chip.bans > 0 ? '#ef4444' : 'var(--texto-claro)'}">${chip.bans || 0}</b></span>
-                        </div>
+                        ${gerarGridCards(chipsVip)}
                     </div>
                 `;
-            });
+            }
 
-            chipsGridHTML += `</div>`;
+            // LINHA 2: AMBOS
+            if (chipsAmbos.length > 0) {
+                linhasHTML += `
+                    <div style="margin-top: 15px; padding: 12px; background: rgba(168, 85, 247, 0.03); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <span class="badge badge-ambos" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">👑 2ª LINHA: NÚMEROS EM AMBOS (VIP + NORMAL)</span>
+                            <span style="font-size: 12px; color: var(--texto-muted);">(${chipsAmbos.length} números)</span>
+                        </div>
+                        ${gerarGridCards(chipsAmbos)}
+                    </div>
+                `;
+            }
+
+            // LINHA 3: NORMAL
+            if (chipsNormal.length > 0) {
+                linhasHTML += `
+                    <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <span class="badge badge-normal" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">📱 3ª LINHA: NÚMEROS NO NORMAL</span>
+                            <span style="font-size: 12px; color: var(--texto-muted);">(${chipsNormal.length} números)</span>
+                        </div>
+                        ${gerarGridCards(chipsNormal)}
+                    </div>
+                `;
+            }
+
+            chipsGridHTML = linhasHTML;
         }
 
         let badgesResumo = '';
