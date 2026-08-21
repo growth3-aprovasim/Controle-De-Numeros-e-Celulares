@@ -198,7 +198,7 @@ function renderizarCampanhasDashboard(campanhas, todosNumeros) {
                 linhasHTML += `
                     <div style="margin-top: 15px; padding: 12px; background: rgba(245, 158, 11, 0.03); border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                            <span class="badge badge-vip" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">⭐ 1ª LINHA: NÚMEROS NO VIP</span>
+                            <span class="badge badge-vip" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">⭐NÚMEROS NO VIP</span>
                             <span style="font-size: 12px; color: var(--texto-muted);">(${chipsVip.length} números)</span>
                         </div>
                         ${gerarGridCards(chipsVip)}
@@ -211,7 +211,7 @@ function renderizarCampanhasDashboard(campanhas, todosNumeros) {
                 linhasHTML += `
                     <div style="margin-top: 15px; padding: 12px; background: rgba(168, 85, 247, 0.03); border: 1px solid rgba(168, 85, 247, 0.15); border-radius: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                            <span class="badge badge-ambos" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">👑 2ª LINHA: NÚMEROS EM AMBOS (VIP + NORMAL)</span>
+                            <span class="badge badge-ambos" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">👑NÚMEROS EM AMBOS (VIP + NORMAL)</span>
                             <span style="font-size: 12px; color: var(--texto-muted);">(${chipsAmbos.length} números)</span>
                         </div>
                         ${gerarGridCards(chipsAmbos)}
@@ -224,7 +224,7 @@ function renderizarCampanhasDashboard(campanhas, todosNumeros) {
                 linhasHTML += `
                     <div style="margin-top: 15px; padding: 12px; background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                            <span class="badge badge-normal" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">📱 3ª LINHA: NÚMEROS NO NORMAL</span>
+                            <span class="badge badge-normal" style="font-size: 11px; padding: 3px 8px; font-weight: bold;">📱NÚMEROS NO NORMAL</span>
                             <span style="font-size: 12px; color: var(--texto-muted);">(${chipsNormal.length} números)</span>
                         </div>
                         ${gerarGridCards(chipsNormal)}
@@ -302,7 +302,7 @@ function renderizarInsights(numeros, aparelhos, campanhas = []) {
     const containerExperts = document.getElementById('resumo-experts');
     if (containerExperts) {
         const expertCounts = {};
-        
+
         campanhas.forEach(camp => {
             const exp = camp.expert || 'Geral';
             const itens = camp.equipes || [];
