@@ -14,7 +14,7 @@
         const favicon = document.createElement('link');
         favicon.rel = 'icon';
         favicon.type = 'image/png';
-        favicon.href = `${basePath}img/logo.png`;
+        favicon.href = `${basePath}img/icon.png`;
         document.head.appendChild(favicon);
     }
 
@@ -62,19 +62,6 @@
             mainContent.insertBefore(tituloGlobal, mainContent.firstChild);
         }
 
-        // 2. Injeta o Rodapé no final da página
-        if (!document.querySelector('.sistema-footer')) {
-            const footer = document.createElement('footer');
-            footer.className = 'sistema-footer';
-            footer.style.cssText = "margin-top: auto; padding: 40px 0 20px 0; text-align: center; color: var(--texto-muted); font-size: 12px; border-top: 1px solid rgba(255, 255, 255, 0.03); width: 100%;";
-            footer.innerHTML = `Desenvolvido por <span style="color: var(--laranja-brabo); font-weight: 500;">Gabriel Gallate</span>`;
-
-            mainContent.appendChild(footer);
-
-            mainContent.style.display = 'flex';
-            mainContent.style.flexDirection = 'column';
-            mainContent.style.minHeight = '100vh';
-        }
     }
 
     if (document.readyState === 'loading') {
