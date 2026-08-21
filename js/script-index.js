@@ -6,13 +6,38 @@ async function carregarDashboard() {
         const campanhas = (await DB.campanhas.listar()) || [];
         const aparelhos = (await DB.mapaAparelhos.listar()) || [];
 
+        // Sincronização automática de status:
+        // Se um número está em campanha Em Andamento e com atividade 'Disponível', sincronizar para 'Em Uso'
+        const campanhasAtivasLista = campanhas.filter(c => c.status === 'Em Andamento');
+        const idsEmCampanhaAtiva = new Set();
+        campanhasAtivasLista.forEach(c => {
+            (c.equipes || []).forEach(item => {
+                let idOuNome = item;
+                if (typeof item === 'string' && item.includes(':')) idOuNome = item.split(':')[0];
+                const nObj = numeros.find(n => String(n.id) === String(idOuNome) || n.nome === idOuNome);
+                if (nObj) idsEmCampanhaAtiva.add(nObj.id);
+            });
+        });
+
+        const paraPromoverUso = [];
+        numeros.forEach(n => {
+            if (idsEmCampanhaAtiva.has(n.id) && n.atividade === 'Disponível') {
+                n.atividade = 'Em Uso';
+                paraPromoverUso.push(n.id);
+            }
+        });
+
+        if (paraPromoverUso.length > 0) {
+            DB.numerosControle.atualizarAtividade(paraPromoverUso, 'Em Uso').catch(console.error);
+        }
+
         // --- 1. CÁLCULO DAS MÉTRICAS PRINCIPAIS ---
         const total = numeros.length;
         const emUso = numeros.filter(n => n.atividade === 'Em Uso').length;
         const emAnalise = numeros.filter(n => n.atividade === 'Em Análise').length;
         const banidos = numeros.filter(n => n.atividade === 'Banido').length;
         const reconectar = numeros.filter(n => n.atividade === 'Reconectar').length;
-        const campanhasAtivas = campanhas.filter(c => c.status === 'Em Andamento').length;
+        const campanhasAtivas = campanhasAtivasLista.length;
 
         // Atualiza os contadores no topo
         if (document.getElementById('stat-total')) document.getElementById('stat-total').innerText = total;

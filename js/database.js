@@ -84,29 +84,54 @@ window.DB = {
             const { data, error } = await sb.from('cnc_numeros_controle').select('*').order('id', { ascending: true });
             if (error || !data) { console.error("Erro ao listar números:", error); return []; }
             
-            return data.map(item => ({
-                id: item.id,
-                equipe: item.equipe || "📌 SEM EQUIPE",
-                plataforma: item.plataforma || (item.equipe === "UNNICHAT" || item.equipe === "Unnichat" ? "Unnichat" : "Sendflow"),
-                nome: item.nome || "",
-                numero: item.numero || "",
-                atividade: item.atividade || "Disponível",
-                funcao: item.funcao || "Reserva",
-                bans: item.bans !== undefined && item.bans !== null ? item.bans : 0,
-                qualidade: item.qualidade || "Média",
-                juizo: item.juizo || "",
-                statusEquipe: item.status_equipe || "Disponível",
-                expert: item.expert || ["Mateus"],
-                isCapitao: !!item.is_capitao,
-                bm: item.bm || "",
-                target: item.target || ""
-            }));
+            return data.map(item => {
+                let bm = item.bm || "";
+                let target = item.target || "";
+                
+                // Fallback inteligente para recuperar BM e Target caso não estejam em colunas separadas
+                if ((!bm || !target) && item.juizo && typeof item.juizo === 'string') {
+                    try {
+                        const parsed = JSON.parse(item.juizo);
+                        if (parsed && typeof parsed === 'object') {
+                            if (!bm && parsed.bm) bm = parsed.bm;
+                            if (!target && parsed.target) target = parsed.target;
+                        }
+                    } catch (e) {}
+                }
+
+                const isUnnichat = item.plataforma === "Unnichat" || item.equipe === "UNNICHAT" || item.equipe === "Unnichat" || (item.juizo && item.juizo.includes('"bm"'));
+
+                return {
+                    id: item.id,
+                    equipe: item.equipe || (isUnnichat ? "UNNICHAT" : "SENDFLOW"),
+                    plataforma: item.plataforma || (isUnnichat ? "Unnichat" : "Sendflow"),
+                    nome: item.nome || "",
+                    numero: item.numero || "",
+                    atividade: item.atividade || "Disponível",
+                    funcao: item.funcao || "Reserva",
+                    bans: item.bans !== undefined && item.bans !== null ? item.bans : 0,
+                    qualidade: item.qualidade || "Média",
+                    juizo: item.juizo || "",
+                    statusEquipe: item.status_equipe || "Disponível",
+                    expert: item.expert || ["Mateus"],
+                    isCapitao: !!item.is_capitao,
+                    bm: bm,
+                    target: target
+                };
+            });
         },
         salvar: async function(item) {
             const sb = await getSupabase();
             if (!sb) return;
             
             const plataforma = item.plataforma || (item.equipe === "UNNICHAT" ? "Unnichat" : "Sendflow");
+            
+            // Se for Unnichat, empacota BM e Target no juizo como garantia de persistência
+            let juizoFinal = item.juizo || "";
+            if (plataforma === "Unnichat") {
+                juizoFinal = JSON.stringify({ bm: item.bm || "", target: item.target || "" });
+            }
+
             const payload = {
                 equipe: item.equipe || (plataforma === "Unnichat" ? "UNNICHAT" : "SENDFLOW"),
                 plataforma: plataforma,
@@ -116,7 +141,7 @@ window.DB = {
                 funcao: item.funcao || "Reserva",
                 bans: item.bans !== undefined && item.bans !== null ? item.bans : 0,
                 qualidade: item.qualidade || "Média",
-                juizo: item.juizo || "",
+                juizo: juizoFinal,
                 status_equipe: item.statusEquipe || "Disponível",
                 expert: Array.isArray(item.expert) ? item.expert : [item.expert || "Mateus"],
                 is_capitao: !!item.isCapitao,
@@ -127,29 +152,25 @@ window.DB = {
             if (!item.id) {
                 const { data, error } = await sb.from('cnc_numeros_controle').insert([payload]).select();
                 if (error) {
-                    console.error("Erro ao inserir:", error);
+                    console.error("Tentando inserção com fallback:", error);
                     // Fallback caso as colunas bm/target/plataforma ainda não existam no Supabase
-                    if (error.message && (error.message.includes('column') || error.code === '42703')) {
-                        delete payload.bm;
-                        delete payload.target;
-                        delete payload.plataforma;
-                        const { data: d2, error: err2 } = await sb.from('cnc_numeros_controle').insert([payload]).select();
-                        if (err2) console.error("Erro no fallback de inserção:", err2);
-                        return d2 && d2[0] ? { ...item, id: d2[0].id } : item;
-                    }
+                    delete payload.bm;
+                    delete payload.target;
+                    delete payload.plataforma;
+                    const { data: d2, error: err2 } = await sb.from('cnc_numeros_controle').insert([payload]).select();
+                    if (err2) console.error("Erro no fallback de inserção:", err2);
+                    return d2 && d2[0] ? { ...item, id: d2[0].id } : item;
                 }
                 return data && data[0] ? { ...item, id: data[0].id } : item;
             } else {
                 const { error } = await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
                 if (error) {
-                    console.error("Erro ao atualizar:", error);
+                    console.error("Tentando atualização com fallback:", error);
                     // Fallback caso as colunas ainda não existam no Supabase
-                    if (error.message && (error.message.includes('column') || error.code === '42703')) {
-                        delete payload.bm;
-                        delete payload.target;
-                        delete payload.plataforma;
-                        await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
-                    }
+                    delete payload.bm;
+                    delete payload.target;
+                    delete payload.plataforma;
+                    await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
                 }
                 return item;
             }

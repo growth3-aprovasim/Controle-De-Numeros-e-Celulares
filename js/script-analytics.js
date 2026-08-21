@@ -4,10 +4,8 @@ let listaNumerosGlobal = [];
 let listaCampanhasGlobal = [];
 
 let chartCampanhasInst = null;
+let chartFuncaoAlocadoUsoInst = null;
 let chartStatusInst = null;
-let chartExpertsInst = null;
-let chartFuncoesInst = null;
-let chartPlanejadoRealInst = null;
 
 // Configuração padrão de tema escuro para o Chart.js
 Chart.defaults.color = '#94a3b8';
@@ -105,10 +103,15 @@ function aplicarFiltroCampanhaAnalytics() {
     const dataVip = [];
     const dataAmbos = [];
     const dataNormal = [];
-    const dataPlanejado = [];
-    const dataReal = [];
 
-    const expertCampanhasCounts = {};
+    // Contadores para o gráfico combinado de funções (Alocados vs Em Uso)
+    let alocadosEnvios = 0;
+    let alocadosCriador = 0;
+    let alocadosReserva = 0;
+
+    let emUsoEnvios = 0;
+    let emUsoCriador = 0;
+    let emUsoReserva = 0;
 
     const dadosTabelaCampanhas = campanhasFiltradas.map(camp => {
         let vip = 0;
@@ -134,22 +137,26 @@ function aplicarFiltroCampanhaAnalytics() {
             const numObj = listaNumerosGlobal.find(n => String(n.id) === String(idOuNome) || n.nome === idOuNome);
             if (numObj) {
                 bansAcumulados += (Number(numObj.bans) || 0);
+                
+                const func = numObj.funcao || 'Reserva';
+                if (func === 'Envios') alocadosEnvios++;
+                else if (func === 'Criador') alocadosCriador++;
+                else alocadosReserva++;
+
                 if (numObj.atividade === 'Em Uso') {
                     reaisEmUso++;
+                    if (func === 'Envios') emUsoEnvios++;
+                    else if (func === 'Criador') emUsoCriador++;
+                    else emUsoReserva++;
                 }
             }
         });
 
         const totalNumsCamp = vip + ambos + normal;
-        nomesCampanhas.push(camp.nome.length > 20 ? camp.nome.substring(0, 18) + '...' : camp.nome);
+        nomesCampanhas.push(camp.nome.length > 18 ? camp.nome.substring(0, 16) + '...' : camp.nome);
         dataVip.push(vip);
         dataAmbos.push(ambos);
         dataNormal.push(normal);
-        dataPlanejado.push(totalNumsCamp);
-        dataReal.push(reaisEmUso);
-
-        const exp = camp.expert || 'Geral';
-        expertCampanhasCounts[exp] = (expertCampanhasCounts[exp] || 0) + totalNumsCamp;
 
         return {
             nome: camp.nome,
@@ -166,18 +173,19 @@ function aplicarFiltroCampanhaAnalytics() {
     });
 
     // 3. RENDERIZAR GRÁFICOS
-    renderizarGraficoCampanhas(nomesCampanhas, dataVip, dataAmbos, dataNormal);
-    renderizarGraficoExperts(expertCampanhasCounts);
-    renderizarGraficoPlanejadoReal(nomesCampanhas, dataPlanejado, dataReal);
+    renderizarGraficoCampanhasColunas(nomesCampanhas, dataVip, dataAmbos, dataNormal);
+    renderizarGraficoFuncaoAlocadoUso(
+        [alocadosEnvios, alocadosCriador, alocadosReserva],
+        [emUsoEnvios, emUsoCriador, emUsoReserva]
+    );
     renderizarGraficoStatus(totalDisponivel, totalEmUso, totalAnalise, totalReconectar, totalBanidos);
-    renderizarGraficoFuncoes(numerosAnalisados);
 
     // 4. RENDERIZAR TABELA
     renderizarTabelaComparativa(dadosTabelaCampanhas);
 }
 
-// --- GRÁFICO 1: COMPARATIVO DE CAMPANHAS (VIP vs Normal vs Ambos) ---
-function renderizarGraficoCampanhas(labels, vips, ambos, normais) {
+// --- GRÁFICO 1: COMPARATIVO POR CAMPANHA COM COLUNAS LATERAIS (AGRUPADAS) ---
+function renderizarGraficoCampanhasColunas(labels, vips, ambos, normais) {
     const ctx = document.getElementById('chartCampanhas');
     if (!ctx) return;
 
@@ -192,18 +200,24 @@ function renderizarGraficoCampanhas(labels, vips, ambos, normais) {
                     label: '⭐ VIP',
                     data: vips.length > 0 ? vips : [0],
                     backgroundColor: '#f59e0b',
+                    borderColor: '#d97706',
+                    borderWidth: 1,
                     borderRadius: 4
                 },
                 {
                     label: '👑 Ambos',
                     data: ambos.length > 0 ? ambos : [0],
                     backgroundColor: '#a855f7',
+                    borderColor: '#9333ea',
+                    borderWidth: 1,
                     borderRadius: 4
                 },
                 {
                     label: '📱 Normal',
                     data: normais.length > 0 ? normais : [0],
                     backgroundColor: '#3b82f6',
+                    borderColor: '#2563eb',
+                    borderWidth: 1,
                     borderRadius: 4
                 }
             ]
@@ -213,93 +227,51 @@ function renderizarGraficoCampanhas(labels, vips, ambos, normais) {
             maintainAspectRatio: false,
             scales: {
                 x: {
-                    stacked: true,
+                    stacked: false, // Colunas lado a lado
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
                 },
                 y: {
-                    stacked: true,
+                    stacked: false, // Colunas lado a lado
                     beginAtZero: true,
                     ticks: { precision: 0 },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
                 }
             },
             plugins: {
-                legend: { position: 'top', labels: { boxWidth: 12 } },
+                legend: { position: 'top', labels: { boxWidth: 12, padding: 12 } },
                 tooltip: { padding: 10 }
             }
         }
     });
 }
 
-// --- GRÁFICO 2: CARGA DE NÚMEROS POR EXPERT ---
-function renderizarGraficoExperts(counts) {
-    const ctx = document.getElementById('chartExperts');
+// --- GRÁFICO 2: ALOCADOS VS EM USO POR FUNÇÃO (ENVIOS, CRIADOR, RESERVA) ---
+function renderizarGraficoFuncaoAlocadoUso(alocados, emUso) {
+    const ctx = document.getElementById('chartFuncaoAlocadoUso');
     if (!ctx) return;
 
-    if (chartExpertsInst) chartExpertsInst.destroy();
+    if (chartFuncaoAlocadoUsoInst) chartFuncaoAlocadoUsoInst.destroy();
 
-    const labels = Object.keys(counts);
-    const data = Object.values(counts);
-
-    chartExpertsInst = new Chart(ctx, {
+    chartFuncaoAlocadoUsoInst = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels.length > 0 ? labels : ['Sem dados'],
-            datasets: [{
-                label: 'Números Alocados',
-                data: data.length > 0 ? data : [0],
-                backgroundColor: ['#6ee7b7', '#93c5fd', '#fcd34d', '#f472b6', '#a78bfa'],
-                borderRadius: 6
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: { precision: 0 },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
-                },
-                y: {
-                    grid: { display: false }
-                }
-            },
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
-}
-
-// --- GRÁFICO 3: NÚMEROS PLANEJADOS VS NÚMEROS REAIS ---
-function renderizarGraficoPlanejadoReal(labels, planejados, reais) {
-    const ctx = document.getElementById('chartPlanejadoReal');
-    if (!ctx) return;
-
-    if (chartPlanejadoRealInst) chartPlanejadoRealInst.destroy();
-
-    chartPlanejadoRealInst = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels.length > 0 ? labels : ['Sem campanhas'],
+            labels: ['Envios', 'Criador', 'Reserva'],
             datasets: [
                 {
-                    label: '📋 Planejado (Alocado)',
-                    data: planejados.length > 0 ? planejados : [0],
+                    label: '📋 Números Alocados (Planejado)',
+                    data: alocados,
                     backgroundColor: 'rgba(59, 130, 246, 0.85)',
                     borderColor: '#3b82f6',
                     borderWidth: 1,
-                    borderRadius: 4
+                    borderRadius: 5
                 },
                 {
-                    label: '🟢 Real (Em Operação)',
-                    data: reais.length > 0 ? reais : [0],
+                    label: '🟢 Em Operação (Em Uso Real)',
+                    data: emUso,
                     backgroundColor: 'rgba(16, 185, 129, 0.85)',
                     borderColor: '#10b981',
                     borderWidth: 1,
-                    borderRadius: 4
+                    borderRadius: 5
                 }
             ]
         },
@@ -308,6 +280,7 @@ function renderizarGraficoPlanejadoReal(labels, planejados, reais) {
             maintainAspectRatio: false,
             scales: {
                 x: {
+                    stacked: false,
                     grid: { color: 'rgba(255, 255, 255, 0.05)' }
                 },
                 y: {
@@ -317,15 +290,15 @@ function renderizarGraficoPlanejadoReal(labels, planejados, reais) {
                 }
             },
             plugins: {
-                legend: { position: 'top', labels: { boxWidth: 14 } },
+                legend: { position: 'top', labels: { boxWidth: 12, padding: 12 } },
                 tooltip: {
                     callbacks: {
                         afterBody: function(context) {
                             const index = context[0].dataIndex;
-                            const plan = planejados[index] || 0;
-                            const real = reais[index] || 0;
-                            const perc = plan > 0 ? Math.round((real / plan) * 100) : 0;
-                            return `Taxa de Cobertura: ${perc}%`;
+                            const totalAlocado = alocados[index] || 0;
+                            const totalUso = emUso[index] || 0;
+                            const taxa = totalAlocado > 0 ? Math.round((totalUso / totalAlocado) * 100) : 0;
+                            return `Taxa em Operação: ${taxa}%`;
                         }
                     }
                 }
@@ -334,31 +307,38 @@ function renderizarGraficoPlanejadoReal(labels, planejados, reais) {
     });
 }
 
-// --- GRÁFICO 4: STATUS DA BASE (ROSCA COM AMOSTRAS VISÍVEIS) ---
+// --- GRÁFICO 3: STATUS DA BASE COM AMOSTRAS VISÍVEIS ---
 function renderizarGraficoStatus(disp, uso, analise, reconectar, banido) {
-    // 1. Atualizar cards de amostras numéricas diretas
+    const totalGeral = disp + uso + analise + reconectar + banido;
+    const calcPerc = (val) => totalGeral > 0 ? Math.round((val / totalGeral) * 100) : 0;
+
     const resumoAmostras = document.getElementById('resumo-status-amostras');
     if (resumoAmostras) {
         resumoAmostras.innerHTML = `
-            <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #10b981; display: block; font-weight: 600;">Disponível</span>
-                <b style="font-size: 15px; color: #10b981;">${disp}</b>
+            <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 10px 14px; text-align: center;">
+                <span style="font-size: 11px; color: #10b981; display: block; font-weight: 600;">Disponível</span>
+                <b style="font-size: 20px; color: #10b981;">${disp}</b>
+                <span style="font-size: 11px; color: var(--texto-muted); display: block; margin-top: 2px;">${calcPerc(disp)}% da base</span>
             </div>
-            <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #60a5fa; display: block; font-weight: 600;">Em Uso</span>
-                <b style="font-size: 15px; color: #60a5fa;">${uso}</b>
+            <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 10px 14px; text-align: center;">
+                <span style="font-size: 11px; color: #60a5fa; display: block; font-weight: 600;">Em Uso</span>
+                <b style="font-size: 20px; color: #60a5fa;">${uso}</b>
+                <span style="font-size: 11px; color: var(--texto-muted); display: block; margin-top: 2px;">${calcPerc(uso)}% da base</span>
             </div>
-            <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #f59e0b; display: block; font-weight: 600;">Em Análise</span>
-                <b style="font-size: 15px; color: #f59e0b;">${analise}</b>
+            <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 10px 14px; text-align: center;">
+                <span style="font-size: 11px; color: #f59e0b; display: block; font-weight: 600;">Em Análise</span>
+                <b style="font-size: 20px; color: #f59e0b;">${analise}</b>
+                <span style="font-size: 11px; color: var(--texto-muted); display: block; margin-top: 2px;">${calcPerc(analise)}% da base</span>
             </div>
-            <div style="background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #a855f7; display: block; font-weight: 600;">Reconectar</span>
-                <b style="font-size: 15px; color: #a855f7;">${reconectar}</b>
+            <div style="background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; padding: 10px 14px; text-align: center;">
+                <span style="font-size: 11px; color: #a855f7; display: block; font-weight: 600;">Reconectar</span>
+                <b style="font-size: 20px; color: #a855f7;">${reconectar}</b>
+                <span style="font-size: 11px; color: var(--texto-muted); display: block; margin-top: 2px;">${calcPerc(reconectar)}% da base</span>
             </div>
-            <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #ef4444; display: block; font-weight: 600;">Banidos</span>
-                <b style="font-size: 15px; color: #ef4444;">${banido}</b>
+            <div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 10px 14px; text-align: center;">
+                <span style="font-size: 11px; color: #ef4444; display: block; font-weight: 600;">Banidos</span>
+                <b style="font-size: 20px; color: #ef4444;">${banido}</b>
+                <span style="font-size: 11px; color: var(--texto-muted); display: block; margin-top: 2px;">${calcPerc(banido)}% da base</span>
             </div>
         `;
     }
@@ -389,64 +369,9 @@ function renderizarGraficoStatus(disp, uso, analise, reconectar, banido) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 11 } } }
+                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } }
             },
             cutout: '60%'
-        }
-    });
-}
-
-// --- GRÁFICO 5: DISTRIBUIÇÃO POR FUNÇÃO ---
-function renderizarGraficoFuncoes(numeros) {
-    const envios = numeros.filter(n => n.funcao === 'Envios').length;
-    const criador = numeros.filter(n => n.funcao === 'Criador').length;
-    const reserva = numeros.filter(n => n.funcao === 'Reserva').length;
-
-    // Resumo de amostras diretas
-    const resumoFuncoes = document.getElementById('resumo-funcoes-amostras');
-    if (resumoFuncoes) {
-        resumoFuncoes.innerHTML = `
-            <div style="background: rgba(43,85,181,0.12); border: 1px solid rgba(43,85,181,0.4); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #60a5fa; display: block; font-weight: 600;">Envios</span>
-                <b style="font-size: 15px; color: #60a5fa;">${envios}</b>
-            </div>
-            <div style="background: rgba(99,48,148,0.12); border: 1px solid rgba(99,48,148,0.4); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #c084fc; display: block; font-weight: 600;">Criador</span>
-                <b style="font-size: 15px; color: #c084fc;">${criador}</b>
-            </div>
-            <div style="background: rgba(255,230,84,0.12); border: 1px solid rgba(255,230,84,0.4); border-radius: 6px; padding: 6px 8px; text-align: center;">
-                <span style="font-size: 10px; color: #fcd34d; display: block; font-weight: 600;">Reserva</span>
-                <b style="font-size: 15px; color: #fcd34d;">${reserva}</b>
-            </div>
-        `;
-    }
-
-    const ctx = document.getElementById('chartFuncoes');
-    if (!ctx) return;
-
-    if (chartFuncoesInst) chartFuncoesInst.destroy();
-
-    chartFuncoesInst = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: [`Envios (${envios})`, `Criador (${criador})`, `Reserva (${reserva})`],
-            datasets: [{
-                data: [envios, criador, reserva],
-                backgroundColor: [
-                    '#2b55b5', // Azul escuro
-                    '#633094', // Roxo escuro
-                    '#ffe654'  // Amarelo
-                ],
-                borderWidth: 2,
-                borderColor: '#1e293b'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 11 } } }
-            }
         }
     });
 }

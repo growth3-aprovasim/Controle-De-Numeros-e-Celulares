@@ -8,6 +8,25 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .equipe-card.fechada .tabela-wrapper {
+            display: none !important;
+        }
+        .equipe-card.fechada .chevron-campanha {
+            transform: rotate(-90deg);
+        }
+        .chevron-campanha {
+            transition: transform 0.3s ease;
+            font-size: 24px;
+            color: var(--texto-muted);
+        }
+        .equipe-titulo-area {
+            transition: background-color 0.2s;
+        }
+        .equipe-titulo-area:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+    </style>
 </head>
 <body>
 

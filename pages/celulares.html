@@ -253,36 +253,6 @@
                 </div>
             </div>
 
-            <!-- TABELA 3: INTEGRAÇÕES API (EXPANSÍVEL) -->
-            <div id="card-tabela-api" class="equipe-card" style="padding: 0; overflow: hidden; margin-bottom: 0; border: 1px solid rgba(59, 130, 246, 0.4);">
-                <div class="tabela-colapsavel-header" onclick="alternarColapso('card-tabela-api')">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="material-icons-round" style="color: #3b82f6; font-size: 24px;">webhook</span>
-                        <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números de Integrações API</h3>
-                        <span id="badge-contador-api" class="badge" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); font-size: 11px;">0 números</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <button onclick="event.stopPropagation(); abrirModalApi();" class="btn-add" style="font-size: 11px; padding: 4px 10px; background-color: #2563eb;">+ ADD API</button>
-                        <span class="material-icons-round chevron-toggle">expand_more</span>
-                    </div>
-                </div>
-
-                <div class="tabela-corpo-wrapper">
-                    <table>
-                        <thead style="background-color: var(--bg-secundario);">
-                            <tr>
-                                <th style="padding: 15px 20px; width: 30%; text-align: left;">NÚMERO</th>
-                                <th style="padding: 15px 20px; text-align: left;">DESCRIÇÃO / FINALIDADE</th>
-                                <th style="padding: 15px 20px; text-align: right; width: 140px;">AÇÕES</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-api-body">
-                            <!-- Renderizado via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         </section>
     </main>
 
@@ -348,11 +318,6 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Total de Bans (Automático)</label>
-                            <input type="number" id="edit-bans" readonly style="opacity: 0.8; cursor: not-allowed; background-color: rgba(0,0,0,0.3);">
-                        </div>
-
-                        <div class="form-group" style="grid-column: span 2;">
                             <label>Juízo Final (Opcional)</label>
                             <input type="text" id="edit-juizo" placeholder="Observações...">
                         </div>
@@ -375,34 +340,6 @@
                 <div class="modal-footer" style="margin-top: 25px;">
                     <button type="button" class="btn-cancelar" onclick="fecharModalChip()">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de API -->
-    <div id="modal-api" class="modal">
-        <div class="modal-content" style="width: 450px;">
-            <div class="modal-header">
-                <h3 id="modal-titulo-api">Adicionar Número API</h3>
-                <span class="close-btn" onclick="fecharModalApi()">&times;</span>
-            </div>
-            <form id="form-api">
-                <input type="hidden" id="edit-api-id">
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Número</label>
-                    <input type="text" id="edit-api-numero" placeholder="Ex: (99) 99999-9999" maxlength="15" oninput="aplicarMascara(this)" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Descrição / Finalidade</label>
-                    <input type="text" id="edit-api-desc" placeholder="Ex: IA ChatGPT, Webhook Typebot" required>
-                </div>
-
-                <div class="modal-footer" style="margin-top: 25px;">
-                    <button type="button" class="btn-cancelar" onclick="fecharModalApi()">Cancelar</button>
-                    <button type="submit" class="btn-salvar">Salvar Vínculo</button>
                 </div>
             </form>
         </div>

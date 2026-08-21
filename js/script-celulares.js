@@ -1,18 +1,15 @@
 // js/script-celulares.js
 
 let listaChips = []; 
-let listaApi = [];
 let colunaAtual = 'nome';
 let ordemCrescente = true; 
 
 async function carregarDadosDoBanco() {
     try {
         listaChips = (await DB.numerosControle.listar()) || [];
-        listaApi = (await DB.apiNumeros.listar()) || [];
         ordenarPor(colunaAtual, true);
-        renderizarTabelaApi();
     } catch (erro) {
-        console.error("Erro ao carregar dados dos chips/API:", erro);
+        console.error("Erro ao carregar dados dos chips:", erro);
     }
 }
 
@@ -193,16 +190,8 @@ function filtrarTodosChips() {
         return true;
     });
 
-    // Filtro para API
-    const apiFiltrados = listaApi.filter(item => {
-        if (!termo) return true;
-        return (item.numero && item.numero.toLowerCase().includes(termo)) ||
-               (item.descricao && item.descricao.toLowerCase().includes(termo));
-    });
-
     renderizarTabelaSendflow(chipsSendflow);
     renderizarTabelaUnnichat(chipsUnnichat);
-    renderizarTabelaApi(apiFiltrados);
 }
 
 function limparFiltrosSendflow() {
@@ -276,18 +265,21 @@ function renderizarTabelaUnnichat(dados) {
     }
 
     dados.forEach(chip => {
+        const bmTexto = chip.bm ? chip.bm : '-';
+        const targetTexto = chip.target ? chip.target : '-';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
             <td style="padding: 15px 20px; text-align: center;">
                 <span class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">
-                    ${chip.bm || 'Sem BM'}
+                    ${bmTexto}
                 </span>
             </td>
             <td style="padding: 15px 20px; text-align: center;">
                 <span class="badge" style="background-color: rgba(255, 255, 255, 0.05); color: var(--texto-claro); border: 1px solid var(--bordas);">
-                    ${chip.target || 'Geral'}
+                    ${targetTexto}
                 </span>
             </td>
             <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
@@ -295,38 +287,6 @@ function renderizarTabelaUnnichat(dados) {
                     <span class="material-icons-round">edit</span>
                 </button>
                 <button class="btn-icon" title="Remover" onclick="removerChip(${chip.id})" style="color: #ef4444;">
-                    <span class="material-icons-round">delete</span>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-// --- RENDERIZAÇÃO DA TABELA API ---
-function renderizarTabelaApi(dados = listaApi) {
-    const tbody = document.getElementById('tabela-api-body');
-    const badgeContador = document.getElementById('badge-contador-api');
-    if (badgeContador) badgeContador.innerText = `${dados.length} números`;
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-
-    if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--texto-muted); padding: 20px;">Nenhum número de API cadastrado.</td></tr>`;
-        return;
-    }
-
-    dados.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="padding: 12px 20px; font-weight: 500; font-family: monospace; font-size: 14px; color: #60a5fa;">${item.numero}</td>
-            <td style="padding: 12px 20px; color: var(--texto-claro);">${item.descricao}</td>
-            <td style="padding: 12px 20px; text-align: right;">
-                <button class="btn-icon" title="Editar" onclick="abrirModalApi(${item.id})">
-                    <span class="material-icons-round">edit</span>
-                </button>
-                <button class="btn-icon" title="Excluir" onclick="excluirApi(${item.id})" style="color: #ef4444;">
                     <span class="material-icons-round">delete</span>
                 </button>
             </td>
@@ -390,7 +350,6 @@ function abrirModalChip(id = null) {
         // Campos Sendflow
         configurarSelectAtividade(chip.atividade || 'Disponível');
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = chip.funcao || 'Envios';
-        if (document.getElementById('edit-bans')) document.getElementById('edit-bans').value = chip.bans !== undefined ? chip.bans : 0;
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = chip.qualidade || 'Alta';
         if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = chip.juizo || '';
         
@@ -408,7 +367,6 @@ function abrirModalChip(id = null) {
         
         configurarSelectAtividade('Disponível');
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = 'Envios';
-        if (document.getElementById('edit-bans')) document.getElementById('edit-bans').value = '0';
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = 'Alta';
         if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = '';
         
@@ -440,7 +398,7 @@ if (formChip) {
         const numeroForm = document.getElementById('edit-numero') ? document.getElementById('edit-numero').value.trim() : '';
         
         const selectAtividade = document.getElementById('edit-num-atividade');
-        const atividadeForm = selectAtividade ? selectAtividade.value : 'Disponível';
+        let atividadeForm = selectAtividade ? selectAtividade.value : 'Disponível';
 
         const funcaoForm = document.getElementById('edit-funcao') ? document.getElementById('edit-funcao').value : 'Envios';
         const qualidadeForm = document.getElementById('edit-qualidade') ? document.getElementById('edit-qualidade').value : 'Alta';
@@ -470,6 +428,31 @@ if (formChip) {
         if (plataformaForm === 'Sendflow' && atividadeForm === 'Banido') {
             if (!chipExistente || chipExistente.atividade !== 'Banido') {
                 bansCalculados += 1;
+            }
+        }
+
+        // --- VERIFICAÇÃO AUTOMÁTICA DE CAMPANHA ATIVA ---
+        // Se o número estava banido/reconectar e foi alterado para Disponível, verificar se ele está em alguma campanha Em Andamento.
+        // Se estiver, mudar automaticamente para "Em Uso"!
+        if (atividadeForm === 'Disponível') {
+            try {
+                const campanhasAtivas = (await DB.campanhas.listar()) || [];
+                const estaEmCampanhaAndamento = campanhasAtivas.some(camp => {
+                    if (camp.status !== 'Em Andamento') return false;
+                    return (camp.equipes || []).some(item => {
+                        let idOuNome = item;
+                        if (typeof item === 'string' && item.includes(':')) {
+                            idOuNome = item.split(':')[0];
+                        }
+                        return String(idOuNome) === String(idAtual) || idOuNome === nomeForm;
+                    });
+                });
+
+                if (estaEmCampanhaAndamento) {
+                    atividadeForm = 'Em Uso';
+                }
+            } catch (errCamp) {
+                console.error("Erro ao verificar campanhas ativas:", errCamp);
             }
         }
 
@@ -525,58 +508,6 @@ async function removerChip(id) {
         }
         await carregarDadosDoBanco();
     }
-}
-
-// --- FUNÇÕES DE API ---
-function abrirModalApi(id = null) {
-    if (id) {
-        const item = listaApi.find(a => a.id === id);
-        if (!item) return;
-
-        document.getElementById('modal-titulo-api').innerText = 'Editar Número API';
-        document.getElementById('edit-api-id').value = item.id;
-        document.getElementById('edit-api-numero').value = item.numero;
-        document.getElementById('edit-api-desc').value = item.descricao;
-    } else {
-        document.getElementById('modal-titulo-api').innerText = 'Adicionar Número API';
-        document.getElementById('edit-api-id').value = '';
-        document.getElementById('edit-api-numero').value = '';
-        document.getElementById('edit-api-desc').value = '';
-    }
-
-    document.getElementById('modal-api').style.display = 'flex';
-}
-
-function fecharModalApi() {
-    document.getElementById('modal-api').style.display = 'none';
-}
-
-async function excluirApi(id) {
-    if (confirm("Tem certeza que deseja excluir este número das integrações de API?")) {
-        await DB.apiNumeros.deletar(id);
-        await carregarDadosDoBanco();
-    }
-}
-
-const formApi = document.getElementById('form-api');
-if (formApi) {
-    formApi.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const idValue = document.getElementById('edit-api-id').value;
-        const idAtual = idValue === '' ? null : parseInt(idValue);
-        const numeroForm = document.getElementById('edit-api-numero').value.trim();
-        const descForm = document.getElementById('edit-api-desc').value.trim();
-
-        await DB.apiNumeros.salvar({
-            id: idAtual,
-            numero: numeroForm,
-            descricao: descForm
-        });
-
-        fecharModalApi();
-        await carregarDadosDoBanco();
-    });
 }
 
 // --- MODAL DE HISTÓRICO COMPLETO DO CHIP ---

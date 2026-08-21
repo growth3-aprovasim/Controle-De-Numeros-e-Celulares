@@ -60,6 +60,13 @@ function obterNumerosDetalhadosDaCampanha(camp) {
     return resultado;
 }
 
+function alternarColapsoCampanha(elementoHeader) {
+    const card = elementoHeader.closest('.equipe-card');
+    if (card) {
+        card.classList.toggle('fechada');
+    }
+}
+
 function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
     const container = document.getElementById('grid-campanhas');
     if (!container) return;
@@ -72,7 +79,8 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
 
     dadosParaRenderizar.forEach(camp => {
         const card = document.createElement('div');
-        card.className = 'equipe-card aberto';
+        // Padrão: FECHADA (suspensa/colapsada)
+        card.className = 'equipe-card fechada';
         card.style.borderColor = camp.status === 'Encerrada' ? 'var(--bordas)' : 'var(--laranja-brabo)';
 
         let corStatus = '#3b82f6';
@@ -135,10 +143,13 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
         if (totalNormal > 0) tagsGruposResumo += `<span class="badge badge-normal" style="font-size: 10px; padding: 2px 6px;">📱 ${totalNormal} Normal</span> `;
 
         let htmlCard = `
-            <div class="equipe-titulo-area" style="cursor: default;">
+            <div class="equipe-titulo-area" onclick="alternarColapsoCampanha(this)" style="cursor: pointer; user-select: none;">
                 <div class="equipe-titulo-esq">
-                    <h3>${camp.nome}</h3>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round chevron-campanha">expand_more</span>
+                        <h3 style="margin: 0;">${camp.nome}</h3>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 34px;">
                         <span style="font-size: 13px; color: var(--texto-muted); font-weight: normal;">
                             (Total: <b style="color: var(--laranja-brabo);">${totalNumerosCampanha}</b> números)
                         </span>
@@ -149,10 +160,10 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
                     <span class="badge" style="background-color: ${corStatus}20; color: ${corStatus}; border: 1px solid ${corStatus}50;">${camp.status}</span>
                     <span class="badge bg-expert"><span class="material-icons-round" style="font-size: 12px; margin-right: 4px;">event</span> ${camp.data ? camp.data.split('-').reverse().join('/') : 'Sem data'}</span>
                     <span class="badge" style="background-color: rgba(255,255,255,0.06); color: var(--texto-claro);"><span class="material-icons-round" style="font-size: 12px; margin-right: 4px;">person</span> ${camp.expert || 'Geral'}</span>
-                    <button class="btn-icon" title="Editar Campanha" onclick="abrirModalCampanha(${camp.id})">
+                    <button class="btn-icon" title="Editar Campanha" onclick="event.stopPropagation(); abrirModalCampanha(${camp.id})">
                         <span class="material-icons-round">edit</span>
                     </button>
-                    <button class="btn-icon" title="Excluir Campanha" onclick="excluirCampanha(${camp.id})" style="color: #ef4444;">
+                    <button class="btn-icon" title="Excluir Campanha" onclick="event.stopPropagation(); excluirCampanha(${camp.id})" style="color: #ef4444;">
                         <span class="material-icons-round">delete</span>
                     </button>
                 </div>
