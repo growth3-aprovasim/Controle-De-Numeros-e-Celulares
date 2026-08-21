@@ -5,7 +5,7 @@ if (typeof window.supabaseClient === 'undefined') {
     window.supabaseClient = null;
 }
 
-// Credenciais dinâmicas protegidas (lidas de js/config.js ou .env)
+// Credenciais dinâmicas protegidas (lidas de js/env.js, gerado em runtime pelo Docker)
 const SUPABASE_URL = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.URL) || '';
 const SUPABASE_ANON_KEY = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.ANON_KEY) || '';
 
@@ -13,7 +13,7 @@ async function getSupabase() {
     if (window.supabaseClient) return window.supabaseClient;
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        console.error("⚠️ Configurações do Supabase não encontradas! Verifique o arquivo js/config.js.");
+        console.error("⚠️ Configurações do Supabase não encontradas! Verifique as variáveis de ambiente do servidor (.env).");
         return null;
     }
 

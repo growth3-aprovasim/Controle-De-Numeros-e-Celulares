@@ -2,7 +2,6 @@
 .gitignore
 .env
 .env.*
-js/config.js
 __pycache__/
 *.pyc
 *.db

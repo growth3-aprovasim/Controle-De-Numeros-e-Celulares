@@ -2,7 +2,6 @@
 .env
 .env.local
 .env.*.local
-js/config.js
 
 # Banco de dados local SQLite legado
 *.db
