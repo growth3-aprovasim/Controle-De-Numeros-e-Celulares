@@ -31,12 +31,14 @@ async function carregarDashboard() {
             DB.numerosControle.atualizarAtividade(paraPromoverUso, 'Em Uso').catch(console.error);
         }
 
-        // --- 1. CÁLCULO DAS MÉTRICAS PRINCIPAIS ---
-        const total = numeros.length;
-        const emUso = numeros.filter(n => n.atividade === 'Em Uso').length;
-        const emAnalise = numeros.filter(n => n.atividade === 'Em Análise').length;
-        const banidos = numeros.filter(n => n.atividade === 'Banido').length;
-        const reconectar = numeros.filter(n => n.atividade === 'Reconectar').length;
+        // --- 1. CÁLCULO DAS MÉTRICAS PRINCIPAIS (APENAS NÚMEROS DE CAMPANHAS ATIVAS) ---
+        const numerosCampanhasAtivas = numeros.filter(n => idsEmCampanhaAtiva.has(n.id));
+
+        const total = numerosCampanhasAtivas.length;
+        const emUso = numerosCampanhasAtivas.filter(n => n.atividade === 'Em Uso').length;
+        const emAnalise = numerosCampanhasAtivas.filter(n => n.atividade === 'Em Análise').length;
+        const banidos = numerosCampanhasAtivas.filter(n => n.atividade === 'Banido').length;
+        const reconectar = numerosCampanhasAtivas.filter(n => n.atividade === 'Reconectar').length;
         const campanhasAtivas = campanhasAtivasLista.length;
 
         // Atualiza os contadores no topo
@@ -50,8 +52,8 @@ async function carregarDashboard() {
         // --- 2. RENDERIZAÇÃO DAS CAMPANHAS EM DESTAQUE COM CARDS VISUAIS DE CHIPS ---
         renderizarCampanhasDashboard(campanhas, numeros);
 
-        // --- 3. INSIGHTS: APARELHOS, FUNÇÕES E EXPERTS (BASEADO EM CAMPANHAS) ---
-        renderizarInsights(numeros, aparelhos, campanhas);
+        // --- 3. INSIGHTS: APARELHOS, FUNÇÕES E EXPERTS (BASEADO EM CAMPANHAS ATIVAS) ---
+        renderizarInsights(numerosCampanhasAtivas, aparelhos, campanhas);
 
     } catch (e) {
         console.error("Erro ao carregar dados do dashboard:", e);
@@ -330,7 +332,13 @@ function renderizarInsights(numeros, aparelhos, campanhas = []) {
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', carregarDashboard);
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarDashboard();
+        DB.assinarMudancas('cnc_numeros_controle', () => carregarDashboard());
+        DB.assinarMudancas('cnc_campanhas', () => carregarDashboard());
+    });
 } else {
     carregarDashboard();
+    DB.assinarMudancas('cnc_numeros_controle', () => carregarDashboard());
+    DB.assinarMudancas('cnc_campanhas', () => carregarDashboard());
 }

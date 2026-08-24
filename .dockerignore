@@ -1,7 +1,9 @@
+node_modules
+npm-debug.log
 .git
 .gitignore
 .env
-.env.*
-__pycache__/
-*.pyc
-*.db
+.env.local
+.env.example
+__pycache__
+banco.db

@@ -673,5 +673,6 @@ function fecharModalHistorico() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    carregarDadosDoBanco(); 
+    carregarDadosDoBanco();
+    DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosDoBanco());
 });

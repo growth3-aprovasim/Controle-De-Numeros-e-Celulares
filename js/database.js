@@ -191,6 +191,83 @@ window.DB = {
             const { error } = await sb.from('cnc_numeros_controle').update({ atividade: novaAtividade }).in('id', ids);
             if (error) console.error("Erro ao atualizar atividade em massa:", error);
             return !error;
+        },
+        processarWebhookSendflow: async function(payload) {
+            const sb = await getSupabase();
+            if (!sb) return { success: false, error: "Supabase não conectado." };
+
+            const dataObj = payload?.data || payload || {};
+            const accountName = (dataObj.name || payload.name || '').trim();
+            const accountNumber = String(dataObj.number || payload.number || '').trim();
+            const reason = (dataObj.reason || dataObj.reasonMessage || payload.reason || payload.reasonMessage || '').toLowerCase();
+            const event = payload?.event || '';
+
+            if (!accountName && !accountNumber) {
+                return { success: false, error: "Nome ou número da conta não fornecido no webhook." };
+            }
+
+            // Buscar todos os chips para encontrar correspondência
+            const chips = await this.listar();
+            if (!chips || chips.length === 0) {
+                return { success: false, error: "Nenhum chip cadastrado no sistema." };
+            }
+
+            // Normalização de números (somente dígitos)
+            const limparDigitos = (str) => String(str || '').replace(/\D/g, '');
+            const targetDigitos = limparDigitos(accountNumber);
+
+            // 1. Prioridade: Buscar por Nome do Chip
+            let chipEncontrado = chips.find(c => c.nome && c.nome.trim().toLowerCase() === accountName.toLowerCase());
+
+            // 2. Fallback: Buscar por Número
+            if (!chipEncontrado && targetDigitos) {
+                chipEncontrado = chips.find(c => {
+                    const digitosChip = limparDigitos(c.numero);
+                    return digitosChip === targetDigitos || 
+                           (targetDigitos.length >= 8 && digitosChip.endsWith(targetDigitos.slice(-8))) ||
+                           (digitosChip.length >= 8 && targetDigitos.endsWith(digitosChip.slice(-8)));
+                });
+            }
+
+            if (!chipEncontrado) {
+                return {
+                    success: false,
+                    error: `Chip "${accountName || accountNumber}" não encontrado na base de dados.`,
+                    data: { name: accountName, number: accountNumber, reason, event }
+                };
+            }
+
+            // Verificar se a conta foi banida
+            const isBanido = reason.includes('ban') || reason === 'account-banned';
+            const novaAtividade = isBanido ? 'Banido' : 'Reconectar';
+
+            // Incrementar bans caso passe para Banido e não estivesse banido antes
+            let totalBans = Number(chipEncontrado.bans) || 0;
+            if (isBanido && chipEncontrado.atividade !== 'Banido') {
+                totalBans += 1;
+            }
+
+            const { error: updateError } = await sb.from('cnc_numeros_controle').update({
+                atividade: novaAtividade,
+                bans: totalBans
+            }).eq('id', chipEncontrado.id);
+
+            if (updateError) {
+                console.error("Erro ao atualizar chip via webhook:", updateError);
+                return { success: false, error: updateError.message };
+            }
+
+            return {
+                success: true,
+                chipId: chipEncontrado.id,
+                chipNome: chipEncontrado.nome,
+                chipNumero: chipEncontrado.numero,
+                statusAnterior: chipEncontrado.atividade,
+                novoStatus: novaAtividade,
+                isBanido: isBanido,
+                totalBans: totalBans,
+                reason: reason || 'Nenhum motivo informado'
+            };
         }
     },
     
@@ -298,6 +375,21 @@ window.DB = {
             if (!sb) return;
             await sb.from('cnc_mapa_aparelhos').delete().eq('id', id);
             return true;
+        }
+    },
+
+    assinarMudancas: async function(tabela, callback) {
+        const sb = await getSupabase();
+        if (!sb || !sb.channel) return;
+        try {
+            const canal = sb.channel(`realtime_${tabela}_${Math.random()}`)
+                .on('postgres_changes', { event: '*', schema: 'public', table: tabela }, payload => {
+                    if (callback) callback(payload);
+                })
+                .subscribe();
+            return canal;
+        } catch (e) {
+            console.warn("Realtime não pôde ser inicializado:", e);
         }
     }
 };

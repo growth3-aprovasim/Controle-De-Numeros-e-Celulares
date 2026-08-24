@@ -3,11 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brabo Concursos - Números API</title>
+    <title>Brabo Concursos - Webhook & Integrações</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .integ-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--texto-muted);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 18px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .integ-tab-btn.active {
+            color: var(--laranja-brabo);
+            border-bottom-color: var(--laranja-brabo);
+        }
+        .code-box {
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Fira Code', monospace, Consolas;
+            font-size: 12px;
+            color: #38bdf8;
+            overflow-x: auto;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
 </head>
 <body>
 
@@ -15,34 +64,161 @@
     <script src="../js/menu.js"></script>
 
     <main class="main-content">
-        <div class="equipes-header" style="padding: 30px 40px 10px 40px;">
+        <div class="equipes-header" style="padding: 30px 40px 10px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div class="header-esq">
-                <h2>Números API</h2>
-                <div class="search-box">
-                    <span class="material-icons-round">search</span>
-                    <input type="text" id="input-filtro-api" placeholder="Buscar por número ou descrição..." oninput="filtrarApi()">
-                </div>
+                <h2>Webhook Sendflow & Integrações</h2>
+                <p style="color: var(--texto-muted); font-size: 13px; margin-top: 4px;">Conecte o Sendflow (Sendhook) e gerencie integrações em tempo real.</p>
             </div>
-            <button class="btn-add" onclick="abrirModalApi()">+ ADICIONAR API</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="integ-tab-btn active" id="tab-btn-webhook" onclick="trocarAbaInteg('webhook')">
+                    <span class="material-icons-round" style="font-size: 18px;">webhook</span> Webhook Sendflow
+                </button>
+                <button class="integ-tab-btn" id="tab-btn-api" onclick="trocarAbaInteg('api')">
+                    <span class="material-icons-round" style="font-size: 18px;">api</span> Números API
+                </button>
+            </div>
         </div>
 
-        <section class="dashboard-area">
-            <div class="equipe-card aberto" style="padding: 0; border: 1px solid var(--bordas);">
-                <div class="tabela-wrapper" style="display: block;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 30%; text-align: center;">NÚMERO</th>
-                                <th style="text-align: left;">DESCRIÇÃO</th>
-                                <th style="width: 120px; text-align: center;">AÇÕES</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-api-body">
-                            <!-- Renderizado via JS -->
-                        </tbody>
-                    </table>
+        <section class="dashboard-area" style="padding: 20px 40px;">
+
+            <!-- SEÇÃO 1: WEBHOOK SENDFLOW -->
+            <div id="secao-webhook" style="display: flex; flex-direction: column; gap: 25px;">
+                
+                <!-- Card Informativo / Endpoints -->
+                <div class="equipe-card aberto" style="padding: 22px; border-left: 4px solid var(--laranja-brabo);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="font-size: 18px; color: var(--texto-claro); display: flex; align-items: center; gap: 8px;">
+                                <span class="material-icons-round" style="color: var(--laranja-brabo);">sensors</span> Configuração do Sendhook (Sendflow)
+                            </h3>
+                            <p style="font-size: 13px; color: var(--texto-muted); margin-top: 4px;">
+                                Configure no painel do <b>Sendflow</b> o endereço de webhook abaixo para receber automaticamente eventos de desconexão e banimento de contas.
+                            </p>
+                        </div>
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; font-weight: bold;">
+                            ⚡ Conexão Ativa
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 12px; color: var(--texto-muted); font-weight: 600; text-transform: uppercase;">URL do Servidor Webhook Local/Microservice:</label>
+                            <div class="code-box" style="margin-top: 6px;">
+                                <span id="url-webhook-local">http://localhost:3000/webhook/sendflow</span>
+                                <button class="copy-btn" onclick="copiarTexto('url-webhook-local')">
+                                    <span class="material-icons-round" style="font-size: 13px;">content_copy</span> Copiar
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: var(--texto-muted); font-weight: 600; text-transform: uppercase;">URL Supabase Edge Function:</label>
+                            <div class="code-box" style="margin-top: 6px;">
+                                <span id="url-webhook-edge">https://bjfapsvlhojiouarbzap.supabase.co/functions/v1/sendflow-webhook</span>
+                                <button class="copy-btn" onclick="copiarTexto('url-webhook-edge')">
+                                    <span class="material-icons-round" style="font-size: 13px;">content_copy</span> Copiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regra de Negócio Aplicada -->
+                    <div style="margin-top: 15px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px; color: var(--texto-muted); line-height: 1.6;">
+                        <b style="color: var(--texto-claro);">Regras de Automação do Webhook:</b><br>
+                        • <b>Localização do Chip:</b> Busca automaticamente pelo <code>name</code> (nome da conta) ou pelo <code>number</code> (telefone) cadastrado.<br>
+                        • <b>Se motivo for "account-banned" (ou banido):</b> O status do chip é alterado para <span class="badge bg-ativ-banido" style="font-size: 10px; padding: 1px 5px;">Banido</span> e o contador de <b>Bans</b> é incrementado.<br>
+                        • <b>Se motivo for desconexão normal / logout:</b> O status do chip é alterado para <span class="badge bg-ativ-reconectar" style="font-size: 10px; padding: 1px 5px;">Reconectar</span>.
+                    </div>
+                </div>
+
+                <!-- Testador / Simulador Interativo -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    
+                    <!-- Painel de Disparo de Teste -->
+                    <div class="equipe-card aberto" style="padding: 22px;">
+                        <h4 style="font-size: 15px; color: var(--texto-claro); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round" style="color: var(--laranja-brabo);">play_circle</span> Simulador de Webhook Sendflow
+                        </h4>
+                        
+                        <form id="form-simulador-webhook" onsubmit="executarSimulacaoWebhook(event)">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label style="font-size: 12px; color: var(--texto-muted);">Selecione um Chip Cadastrado:</label>
+                                <select id="simula-chip-select" style="width: 100%; padding: 8px 10px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;" onchange="preencherCamposSimulacao()">
+                                    <option value="">-- Carregando chips... --</option>
+                                </select>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                                <div class="form-group">
+                                    <label style="font-size: 12px; color: var(--texto-muted);">Nome da Conta (name):</label>
+                                    <input type="text" id="simula-name" placeholder="Ex: Minha Conta" style="width: 100%;" required>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 12px; color: var(--texto-muted);">Número (number):</label>
+                                    <input type="text" id="simula-number" placeholder="Ex: 5511999999999" style="width: 100%;">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="font-size: 12px; color: var(--texto-muted);">Motivo da Desconexão (reason):</label>
+                                <select id="simula-reason" style="width: 100%; padding: 8px 10px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;" onchange="atualizarJsonSimulacao()">
+                                    <option value="account-banned">account-banned (Conta Banida -> Tag Banido + Soma Ban)</option>
+                                    <option value="user-logout">user-logout (Desconectou -> Tag Reconectar)</option>
+                                    <option value="network-error">network-error (Erro de Rede -> Tag Reconectar)</option>
+                                    <option value="session-expired">session-expired (Sessão Expirada -> Tag Reconectar)</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn-salvar" style="width: 100%; justify-content: center; padding: 12px; font-weight: bold; background: var(--laranja-brabo);">
+                                <span class="material-icons-round">bolt</span> Disparar Teste do Webhook
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- JSON do Payload & Retorno -->
+                    <div class="equipe-card aberto" style="padding: 22px; display: flex; flex-direction: column;">
+                        <h4 style="font-size: 15px; color: var(--texto-claro); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round" style="color: #38bdf8;">code</span> Payload JSON do Evento
+                        </h4>
+                        
+                        <div class="code-box" style="flex: 1; min-height: 220px; white-space: pre-wrap;" id="box-json-preview">
+                        </div>
+
+                        <div id="resultado-simulacao" style="margin-top: 15px; display: none; padding: 12px; border-radius: 6px; font-size: 13px;">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- SEÇÃO 2: NÚMEROS API -->
+            <div id="secao-api" style="display: none; flex-direction: column; gap: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="search-box">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" id="input-filtro-api" placeholder="Buscar por número ou descrição..." oninput="filtrarApi()">
+                    </div>
+                    <button class="btn-add" onclick="abrirModalApi()">+ ADICIONAR API</button>
+                </div>
+
+                <div class="equipe-card aberto" style="padding: 0; border: 1px solid var(--bordas);">
+                    <div class="tabela-wrapper" style="display: block;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 30%; text-align: center;">NÚMERO</th>
+                                    <th style="text-align: left;">DESCRIÇÃO</th>
+                                    <th style="width: 120px; text-align: center;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-api-body">
+                                <!-- Renderizado via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
         </section>
     </main>
 
