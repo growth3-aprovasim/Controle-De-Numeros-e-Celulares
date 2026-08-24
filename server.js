@@ -2,7 +2,7 @@
 // Servidor Node.js Express para Easypanel / Docker
 // Serve os arquivos estáticos do frontend e processa os Webhooks do Sendflow (Sendhook)
 
-try { require('dotenv').config(); } catch (e) {}
+try { require('dotenv').config(); } catch (e) { }
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -57,7 +57,7 @@ app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/pages', express.static(path.join(__dirname, 'pages')));
 
 // Rota raiz para o index.html
-app.get('/', (req, res) => {
+app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -126,8 +126,8 @@ async function processarWebhookSendflow(req, res) {
             chipEncontrado = chips.find(c => {
                 const digitosChip = limparDigitos(c.numero || '');
                 return digitosChip === targetDigitos ||
-                       (targetDigitos.length >= 8 && digitosChip.endsWith(targetDigitos.slice(-8))) ||
-                       (digitosChip.length >= 8 && targetDigitos.endsWith(digitosChip.slice(-8)));
+                    (targetDigitos.length >= 8 && digitosChip.endsWith(targetDigitos.slice(-8))) ||
+                    (digitosChip.length >= 8 && targetDigitos.endsWith(digitosChip.slice(-8)));
             });
         }
 
