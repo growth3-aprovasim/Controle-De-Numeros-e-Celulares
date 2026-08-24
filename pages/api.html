@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,13 +24,15 @@
             gap: 8px;
             transition: all 0.2s;
         }
+
         .integ-tab-btn.active {
             color: var(--laranja-brabo);
             border-bottom-color: var(--laranja-brabo);
         }
+
         .code-box {
             background: #0f172a;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             padding: 14px;
             font-family: 'Fira Code', monospace, Consolas;
@@ -38,12 +41,13 @@
             overflow-x: auto;
             position: relative;
         }
+
         .copy-btn {
             position: absolute;
             top: 8px;
             right: 8px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
             padding: 4px 8px;
             border-radius: 4px;
@@ -53,21 +57,25 @@
             align-items: center;
             gap: 4px;
         }
+
         .copy-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
+
 <body>
 
     <div id="menu-container" data-path="../"></div>
     <script src="../js/menu.js"></script>
 
     <main class="main-content">
-        <div class="equipes-header" style="padding: 30px 40px 10px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div class="equipes-header"
+            style="padding: 30px 40px 10px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div class="header-esq">
                 <h2>Webhook Sendflow & Integrações</h2>
-                <p style="color: var(--texto-muted); font-size: 13px; margin-top: 4px;">Conecte o Sendflow (Sendhook) e gerencie integrações em tempo real.</p>
+                <p style="color: var(--texto-muted); font-size: 13px; margin-top: 4px;">Conecte o Sendflow (Sendhook) e
+                    gerencie integrações em tempo real.</p>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="integ-tab-btn active" id="tab-btn-webhook" onclick="trocarAbaInteg('webhook')">
@@ -83,92 +91,126 @@
 
             <!-- SEÇÃO 1: WEBHOOK SENDFLOW -->
             <div id="secao-webhook" style="display: flex; flex-direction: column; gap: 25px;">
-                
+
                 <!-- Card Informativo / Endpoints -->
                 <div class="equipe-card aberto" style="padding: 22px; border-left: 4px solid var(--laranja-brabo);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                         <div>
-                            <h3 style="font-size: 18px; color: var(--texto-claro); display: flex; align-items: center; gap: 8px;">
-                                <span class="material-icons-round" style="color: var(--laranja-brabo);">sensors</span> Configuração do Sendhook (Sendflow)
+                            <h3
+                                style="font-size: 18px; color: var(--texto-claro); display: flex; align-items: center; gap: 8px;">
+                                <span class="material-icons-round" style="color: var(--laranja-brabo);">sensors</span>
+                                Configuração do Sendhook (Sendflow)
                             </h3>
                             <p style="font-size: 13px; color: var(--texto-muted); margin-top: 4px;">
-                                Configure no painel do <b>Sendflow</b> o endereço de webhook abaixo para receber automaticamente eventos de desconexão e banimento de contas.
+                                Configure no painel do <b>Sendflow</b> o endereço de webhook abaixo para receber
+                                automaticamente eventos de desconexão e banimento de contas.
                             </p>
                         </div>
-                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; font-weight: bold;">
+                        <span class="badge"
+                            style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; font-weight: bold;">
                             ⚡ Conexão Ativa
                         </span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
-                            <label style="font-size: 12px; color: var(--texto-muted); font-weight: 600; text-transform: uppercase;">URL do Servidor Webhook Local/Microservice:</label>
+                            <label
+                                style="font-size: 12px; color: var(--texto-muted); font-weight: 600; text-transform: uppercase;">URL
+                                do Servidor Webhook Local/Microservice:</label>
                             <div class="code-box" style="margin-top: 6px;">
-                                <span id="url-webhook-local">http://localhost:3000/webhook/sendflow</span>
+                                <span
+                                    id="url-webhook-local">https://controle-de-numeros.e4wfok.easypanel.host/webhook/sendflow</span>
                                 <button class="copy-btn" onclick="copiarTexto('url-webhook-local')">
-                                    <span class="material-icons-round" style="font-size: 13px;">content_copy</span> Copiar
+                                    <span class="material-icons-round" style="font-size: 13px;">content_copy</span>
+                                    Copiar
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label style="font-size: 12px; color: var(--texto-muted); font-weight: 600; text-transform: uppercase;">URL Supabase Edge Function:</label>
+                            <label
+                                style="font-size: 12px; color: var(--texto-muted); font-weight: 600; text-transform: uppercase;">URL
+                                Supabase Edge Function:</label>
                             <div class="code-box" style="margin-top: 6px;">
-                                <span id="url-webhook-edge">https://bjfapsvlhojiouarbzap.supabase.co/functions/v1/sendflow-webhook</span>
+                                <span
+                                    id="url-webhook-edge">https://bjfapsvlhojiouarbzap.supabase.co/functions/v1/sendflow-webhook</span>
                                 <button class="copy-btn" onclick="copiarTexto('url-webhook-edge')">
-                                    <span class="material-icons-round" style="font-size: 13px;">content_copy</span> Copiar
+                                    <span class="material-icons-round" style="font-size: 13px;">content_copy</span>
+                                    Copiar
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Regra de Negócio Aplicada -->
-                    <div style="margin-top: 15px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px; color: var(--texto-muted); line-height: 1.6;">
+                    <div
+                        style="margin-top: 15px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px; color: var(--texto-muted); line-height: 1.6;">
                         <b style="color: var(--texto-claro);">Regras de Automação do Webhook:</b><br>
-                        • <b>Localização do Chip:</b> Busca automaticamente pelo <code>name</code> (nome da conta) ou pelo <code>number</code> (telefone) cadastrado.<br>
-                        • <b>Se motivo for "account-banned" (ou banido):</b> O status do chip é alterado para <span class="badge bg-ativ-banido" style="font-size: 10px; padding: 1px 5px;">Banido</span> e o contador de <b>Bans</b> é incrementado.<br>
-                        • <b>Se motivo for desconexão normal / logout:</b> O status do chip é alterado para <span class="badge bg-ativ-reconectar" style="font-size: 10px; padding: 1px 5px;">Reconectar</span>.
+                        • <b>Localização do Chip:</b> Busca automaticamente pelo <code>name</code> (nome da conta) ou
+                        pelo <code>number</code> (telefone) cadastrado.<br>
+                        • <b>Se motivo for "account-banned" (ou banido):</b> O status do chip é alterado para <span
+                            class="badge bg-ativ-banido" style="font-size: 10px; padding: 1px 5px;">Banido</span> e o
+                        contador de <b>Bans</b> é incrementado.<br>
+                        • <b>Se motivo for desconexão normal / logout:</b> O status do chip é alterado para <span
+                            class="badge bg-ativ-reconectar"
+                            style="font-size: 10px; padding: 1px 5px;">Reconectar</span>.
                     </div>
                 </div>
 
                 <!-- Testador / Simulador Interativo -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    
+
                     <!-- Painel de Disparo de Teste -->
                     <div class="equipe-card aberto" style="padding: 22px;">
-                        <h4 style="font-size: 15px; color: var(--texto-claro); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            <span class="material-icons-round" style="color: var(--laranja-brabo);">play_circle</span> Simulador de Webhook Sendflow
+                        <h4
+                            style="font-size: 15px; color: var(--texto-claro); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round" style="color: var(--laranja-brabo);">play_circle</span>
+                            Simulador de Webhook Sendflow
                         </h4>
-                        
+
                         <form id="form-simulador-webhook" onsubmit="executarSimulacaoWebhook(event)">
                             <div class="form-group" style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; color: var(--texto-muted);">Selecione um Chip Cadastrado:</label>
-                                <select id="simula-chip-select" style="width: 100%; padding: 8px 10px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;" onchange="preencherCamposSimulacao()">
+                                <label style="font-size: 12px; color: var(--texto-muted);">Selecione um Chip
+                                    Cadastrado:</label>
+                                <select id="simula-chip-select"
+                                    style="width: 100%; padding: 8px 10px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;"
+                                    onchange="preencherCamposSimulacao()">
                                     <option value="">-- Carregando chips... --</option>
                                 </select>
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                                 <div class="form-group">
-                                    <label style="font-size: 12px; color: var(--texto-muted);">Nome da Conta (name):</label>
-                                    <input type="text" id="simula-name" placeholder="Ex: Minha Conta" style="width: 100%;" required>
+                                    <label style="font-size: 12px; color: var(--texto-muted);">Nome da Conta
+                                        (name):</label>
+                                    <input type="text" id="simula-name" placeholder="Ex: Minha Conta"
+                                        style="width: 100%;" required>
                                 </div>
                                 <div class="form-group">
                                     <label style="font-size: 12px; color: var(--texto-muted);">Número (number):</label>
-                                    <input type="text" id="simula-number" placeholder="Ex: 5511999999999" style="width: 100%;">
+                                    <input type="text" id="simula-number" placeholder="Ex: 5511999999999"
+                                        style="width: 100%;">
                                 </div>
                             </div>
 
                             <div class="form-group" style="margin-bottom: 15px;">
-                                <label style="font-size: 12px; color: var(--texto-muted);">Motivo da Desconexão (reason):</label>
-                                <select id="simula-reason" style="width: 100%; padding: 8px 10px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;" onchange="atualizarJsonSimulacao()">
-                                    <option value="account-banned">account-banned (Conta Banida -> Tag Banido + Soma Ban)</option>
+                                <label style="font-size: 12px; color: var(--texto-muted);">Motivo da Desconexão
+                                    (reason):</label>
+                                <select id="simula-reason"
+                                    style="width: 100%; padding: 8px 10px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;"
+                                    onchange="atualizarJsonSimulacao()">
+                                    <option value="account-banned">account-banned (Conta Banida -> Tag Banido + Soma
+                                        Ban)</option>
                                     <option value="user-logout">user-logout (Desconectou -> Tag Reconectar)</option>
-                                    <option value="network-error">network-error (Erro de Rede -> Tag Reconectar)</option>
-                                    <option value="session-expired">session-expired (Sessão Expirada -> Tag Reconectar)</option>
+                                    <option value="network-error">network-error (Erro de Rede -> Tag Reconectar)
+                                    </option>
+                                    <option value="session-expired">session-expired (Sessão Expirada -> Tag Reconectar)
+                                    </option>
                                 </select>
                             </div>
 
-                            <button type="submit" class="btn-salvar" style="width: 100%; justify-content: center; padding: 12px; font-weight: bold; background: var(--laranja-brabo);">
+                            <button type="submit" class="btn-salvar"
+                                style="width: 100%; justify-content: center; padding: 12px; font-weight: bold; background: var(--laranja-brabo);">
                                 <span class="material-icons-round">bolt</span> Disparar Teste do Webhook
                             </button>
                         </form>
@@ -176,14 +218,18 @@
 
                     <!-- JSON do Payload & Retorno -->
                     <div class="equipe-card aberto" style="padding: 22px; display: flex; flex-direction: column;">
-                        <h4 style="font-size: 15px; color: var(--texto-claro); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            <span class="material-icons-round" style="color: #38bdf8;">code</span> Payload JSON do Evento
+                        <h4
+                            style="font-size: 15px; color: var(--texto-claro); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-icons-round" style="color: #38bdf8;">code</span> Payload JSON do
+                            Evento
                         </h4>
-                        
-                        <div class="code-box" style="flex: 1; min-height: 220px; white-space: pre-wrap;" id="box-json-preview">
+
+                        <div class="code-box" style="flex: 1; min-height: 220px; white-space: pre-wrap;"
+                            id="box-json-preview">
                         </div>
 
-                        <div id="resultado-simulacao" style="margin-top: 15px; display: none; padding: 12px; border-radius: 6px; font-size: 13px;">
+                        <div id="resultado-simulacao"
+                            style="margin-top: 15px; display: none; padding: 12px; border-radius: 6px; font-size: 13px;">
                         </div>
                     </div>
 
@@ -196,7 +242,8 @@
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="search-box">
                         <span class="material-icons-round">search</span>
-                        <input type="text" id="input-filtro-api" placeholder="Buscar por número ou descrição..." oninput="filtrarApi()">
+                        <input type="text" id="input-filtro-api" placeholder="Buscar por número ou descrição..."
+                            oninput="filtrarApi()">
                     </div>
                     <button class="btn-add" onclick="abrirModalApi()">+ ADICIONAR API</button>
                 </div>
@@ -231,12 +278,12 @@
             </div>
             <form id="form-api">
                 <input type="hidden" id="edit-api-id">
-                
+
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label>Número</label>
                     <input type="text" id="edit-api-numero" placeholder="Ex: (99) 99999-9999" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Descrição</label>
                     <input type="text" id="edit-api-desc" placeholder="Ex: IA ChatGPT" required>
@@ -254,4 +301,5 @@
     <script src="../js/database.js"></script>
     <script src="../js/script-api.js"></script>
 </body>
+
 </html>
