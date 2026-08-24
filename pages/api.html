@@ -73,17 +73,9 @@
         <div class="equipes-header"
             style="padding: 30px 40px 10px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div class="header-esq">
-                <h2>Webhook Sendflow & Integrações</h2>
+                <h2>Webhook</h2>
                 <p style="color: var(--texto-muted); font-size: 13px; margin-top: 4px;">Conecte o Sendflow (Sendhook) e
                     gerencie integrações em tempo real.</p>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="integ-tab-btn active" id="tab-btn-webhook" onclick="trocarAbaInteg('webhook')">
-                    <span class="material-icons-round" style="font-size: 18px;">webhook</span> Webhook Sendflow
-                </button>
-                <button class="integ-tab-btn" id="tab-btn-api" onclick="trocarAbaInteg('api')">
-                    <span class="material-icons-round" style="font-size: 18px;">api</span> Números API
-                </button>
             </div>
         </div>
 
@@ -235,35 +227,6 @@
 
                 </div>
 
-            </div>
-
-            <!-- SEÇÃO 2: NÚMEROS API -->
-            <div id="secao-api" style="display: none; flex-direction: column; gap: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="search-box">
-                        <span class="material-icons-round">search</span>
-                        <input type="text" id="input-filtro-api" placeholder="Buscar por número ou descrição..."
-                            oninput="filtrarApi()">
-                    </div>
-                    <button class="btn-add" onclick="abrirModalApi()">+ ADICIONAR API</button>
-                </div>
-
-                <div class="equipe-card aberto" style="padding: 0; border: 1px solid var(--bordas);">
-                    <div class="tabela-wrapper" style="display: block;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 30%; text-align: center;">NÚMERO</th>
-                                    <th style="text-align: left;">DESCRIÇÃO</th>
-                                    <th style="width: 120px; text-align: center;">AÇÕES</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-api-body">
-                                <!-- Renderizado via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
 
         </section>
