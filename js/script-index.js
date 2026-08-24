@@ -6,22 +6,36 @@ async function carregarDashboard() {
         const campanhas = (await DB.campanhas.listar()) || [];
         const aparelhos = (await DB.mapaAparelhos.listar()) || [];
 
-        // Sincronização automática de status:
-        // Se um número está em campanha Em Andamento e com atividade 'Disponível', sincronizar para 'Em Uso'
-        const campanhasAtivasLista = campanhas.filter(c => c.status === 'Em Andamento');
+        // Filtra estritamente as campanhas ativas (Em Andamento)
+        let campanhasAtivasLista = campanhas.filter(c => c.status === 'Em Andamento');
+        if (campanhasAtivasLista.length === 0) {
+            // Fallback caso estejam cadastradas sem status 'Encerrada'
+            campanhasAtivasLista = campanhas.filter(c => c.status !== 'Encerrada');
+        }
+
+        // Mapear todos os chips únicos que estão alocados nas campanhas ativas
         const idsEmCampanhaAtiva = new Set();
+        const chipsEmCampanhasAtivas = [];
+
         campanhasAtivasLista.forEach(c => {
             (c.equipes || []).forEach(item => {
                 let idOuNome = item;
-                if (typeof item === 'string' && item.includes(':')) idOuNome = item.split(':')[0];
-                const nObj = numeros.find(n => String(n.id) === String(idOuNome) || n.nome === idOuNome);
-                if (nObj) idsEmCampanhaAtiva.add(nObj.id);
+                if (typeof item === 'string' && item.includes(':')) {
+                    idOuNome = item.split(':')[0].trim();
+                }
+                const nObj = numeros.find(n => String(n.id) === String(idOuNome) || (n.nome && n.nome.trim().toLowerCase() === String(idOuNome).toLowerCase()));
+                if (nObj && !idsEmCampanhaAtiva.has(nObj.id)) {
+                    idsEmCampanhaAtiva.add(nObj.id);
+                    chipsEmCampanhasAtivas.push(nObj);
+                }
             });
         });
 
+        // Sincronização automática de status:
+        // Se um número está em campanha ativa e com atividade 'Disponível', sincronizar para 'Em Uso'
         const paraPromoverUso = [];
-        numeros.forEach(n => {
-            if (idsEmCampanhaAtiva.has(n.id) && n.atividade === 'Disponível') {
+        chipsEmCampanhasAtivas.forEach(n => {
+            if (n.atividade === 'Disponível') {
                 n.atividade = 'Em Uso';
                 paraPromoverUso.push(n.id);
             }
@@ -31,14 +45,12 @@ async function carregarDashboard() {
             DB.numerosControle.atualizarAtividade(paraPromoverUso, 'Em Uso').catch(console.error);
         }
 
-        // --- 1. CÁLCULO DAS MÉTRICAS PRINCIPAIS (APENAS NÚMEROS DE CAMPANHAS ATIVAS) ---
-        const numerosCampanhasAtivas = numeros.filter(n => idsEmCampanhaAtiva.has(n.id));
-
-        const total = numerosCampanhasAtivas.length;
-        const emUso = numerosCampanhasAtivas.filter(n => n.atividade === 'Em Uso').length;
-        const emAnalise = numerosCampanhasAtivas.filter(n => n.atividade === 'Em Análise').length;
-        const banidos = numerosCampanhasAtivas.filter(n => n.atividade === 'Banido').length;
-        const reconectar = numerosCampanhasAtivas.filter(n => n.atividade === 'Reconectar').length;
+        // --- 1. CÁLCULO DAS MÉTRICAS PRINCIPAIS (APENAS NÚMEROS DAS CAMPANHAS EM ANDAMENTO) ---
+        const total = chipsEmCampanhasAtivas.length;
+        const emUso = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Em Uso').length;
+        const emAnalise = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Em Análise').length;
+        const banidos = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Banido').length;
+        const reconectar = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Reconectar').length;
         const campanhasAtivas = campanhasAtivasLista.length;
 
         // Atualiza os contadores no topo
@@ -50,23 +62,21 @@ async function carregarDashboard() {
         if (document.getElementById('stat-campanhas')) document.getElementById('stat-campanhas').innerText = campanhasAtivas;
 
         // --- 2. RENDERIZAÇÃO DAS CAMPANHAS EM DESTAQUE COM CARDS VISUAIS DE CHIPS ---
-        renderizarCampanhasDashboard(campanhas, numeros);
+        renderizarCampanhasDashboard(campanhasAtivasLista, numeros);
 
         // --- 3. INSIGHTS: APARELHOS, FUNÇÕES E EXPERTS (BASEADO EM CAMPANHAS ATIVAS) ---
-        renderizarInsights(numerosCampanhasAtivas, aparelhos, campanhas);
+        renderizarInsights(chipsEmCampanhasAtivas, aparelhos, campanhasAtivasLista);
 
     } catch (e) {
         console.error("Erro ao carregar dados do dashboard:", e);
     }
 }
 
-function renderizarCampanhasDashboard(campanhas, todosNumeros) {
+function renderizarCampanhasDashboard(campanhasAtivasOuTodas, todosNumeros) {
     const container = document.getElementById('dashboard-grid-campanhas');
     if (!container) return;
 
     container.innerHTML = '';
-
-    const campanhasAtivasOuTodas = campanhas.filter(c => c.status !== 'Encerrada');
 
     if (campanhasAtivasOuTodas.length === 0) {
         container.innerHTML = `<div class="equipe-card aberto" style="padding: 25px; text-align: center; color: var(--texto-muted);">Nenhuma campanha em andamento no momento. Vá em Campanhas para criar uma nova.</div>`;
