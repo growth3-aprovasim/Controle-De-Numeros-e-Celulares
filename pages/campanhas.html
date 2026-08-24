@@ -147,6 +147,14 @@
                             <option value="Criador">Criador</option>
                             <option value="Reserva">Reserva</option>
                         </select>
+                        <select id="filtro-status-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px;">
+                            <option value="">Todos Status</option>
+                            <option value="Disponível">Disponível</option>
+                            <option value="Em Uso">Em Uso</option>
+                            <option value="Em Análise">Em Análise</option>
+                            <option value="Banido">Banido</option>
+                            <option value="Reconectar">Reconectar</option>
+                        </select>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -171,6 +179,49 @@
                 <div class="modal-footer" style="margin-top: 25px;">
                     <button type="button" class="btn-cancelar" onclick="fecharModalCampanha()">Cancelar</button>
                     <button type="submit" class="btn-salvar">Salvar Campanha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Número na Campanha (Função e Grupo) -->
+    <div id="modal-editar-numero-campanha" class="modal">
+        <div class="modal-content" style="width: 440px;">
+            <div class="modal-header">
+                <h3>Editar Número na Campanha</h3>
+                <span class="close-btn" onclick="fecharModalEditarNumeroCampanha()">&times;</span>
+            </div>
+            <form id="form-editar-numero-campanha" onsubmit="salvarEdicaoNumeroCampanha(event)">
+                <input type="hidden" id="edit-numcamp-camp-id">
+                <input type="hidden" id="edit-numcamp-num-id">
+
+                <div style="margin-bottom: 15px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--bordas);">
+                    <div style="font-size: 11px; color: var(--texto-muted); text-transform: uppercase; font-weight: 600;">Número Selecionado</div>
+                    <div id="edit-numcamp-nome-preview" style="font-size: 14px; font-weight: bold; color: var(--texto-claro); margin-top: 2px;"></div>
+                    <div id="edit-numcamp-numero-preview" style="font-size: 12px; color: var(--texto-muted);"></div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Grupo na Campanha</label>
+                    <select id="edit-numcamp-grupo" required style="width: 100%; padding: 9px 12px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;">
+                        <option value="NORMAL">📱 NORMAL</option>
+                        <option value="VIP">⭐ VIP</option>
+                        <option value="AMBOS">👑 AMBOS (VIP + Normal)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Função do Número</label>
+                    <select id="edit-numcamp-funcao" required style="width: 100%; padding: 9px 12px; background: var(--bg-principal); border: 1px solid var(--bordas); color: var(--texto-claro); border-radius: 6px;">
+                        <option value="Envios">Envios</option>
+                        <option value="Criador">Criador</option>
+                        <option value="Reserva">Reserva</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 20px;">
+                    <button type="button" class="btn-cancelar" onclick="fecharModalEditarNumeroCampanha()">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
                 </div>
             </form>
         </div>

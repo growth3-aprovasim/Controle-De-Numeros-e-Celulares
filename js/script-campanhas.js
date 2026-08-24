@@ -127,7 +127,10 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
                         <td style="padding: 12px 15px; text-align: center;"><span class="badge ${classAtiv}">${num.atividade}</span></td>
                         <td style="padding: 12px 15px; text-align: center;"><span class="badge ${classFunc}">${num.funcao}</span></td>
                         <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: ${num.bans > 0 ? '#ef4444' : 'var(--texto-muted)'};">${num.bans !== undefined ? num.bans : 0}</td>
-                        <td style="padding: 12px 15px; text-align: right;">
+                        <td style="padding: 12px 15px; text-align: right; white-space: nowrap;">
+                            <button class="btn-icon" title="Alterar Grupo / Função" onclick="abrirModalEditarNumeroCampanha(${camp.id}, ${num.id}, '${grp}')" style="color: var(--laranja-brabo); margin-right: 4px;">
+                                <span class="material-icons-round" style="font-size: 18px;">edit</span>
+                            </button>
                             <button class="btn-icon" title="Remover da Campanha" onclick="removerNumeroDaCampanha(${camp.id}, ${num.id})" style="color: #ef4444;">
                                 <span class="material-icons-round" style="font-size: 18px;">remove_circle_outline</span>
                             </button>
@@ -230,6 +233,8 @@ function abrirModalCampanha(id = null) {
     if (inputBusca) inputBusca.value = '';
     const filtroFunc = document.getElementById('filtro-funcao-modal');
     if (filtroFunc) filtroFunc.value = '';
+    const filtroStatus = document.getElementById('filtro-status-modal');
+    if (filtroStatus) filtroStatus.value = '';
 
     if (id) {
         const camp = listaCampanhas.find(c => c.id === id);
@@ -289,12 +294,16 @@ function renderizarCheckboxesNumeros() {
     const selectFuncao = document.getElementById('filtro-funcao-modal');
     const funcaoFiltro = selectFuncao ? selectFuncao.value : '';
 
+    const selectStatus = document.getElementById('filtro-status-modal');
+    const statusFiltro = selectStatus ? selectStatus.value : '';
+
     const numerosExibicao = listaNumerosGeral.filter(n => {
         // Apenas números do Sendflow podem ser atribuídos em campanhas (excluir Unnichat)
         const isUnnichat = n.plataforma === 'Unnichat' || n.equipe === 'UNNICHAT' || n.equipe === 'Unnichat';
         if (isUnnichat) return false;
 
         if (funcaoFiltro && n.funcao !== funcaoFiltro) return false;
+        if (statusFiltro && n.atividade !== statusFiltro) return false;
         if (!termo) return true;
         return (n.nome && n.nome.toLowerCase().includes(termo)) ||
             (n.numero && n.numero.toLowerCase().includes(termo));
@@ -456,6 +465,73 @@ async function removerNumeroDaCampanha(campId, numId) {
         await sincronizarStatusNumeros(listaCampanhas);
         await carregarDadosCampanhas();
     }
+}
+
+// --- MODAL DE EDIÇÃO DE NÚMERO NA CAMPANHA (GRUPO E FUNÇÃO) ---
+function abrirModalEditarNumeroCampanha(campId, numId, grupoAtual = 'NORMAL') {
+    const camp = listaCampanhas.find(c => c.id === campId);
+    const num = listaNumerosGeral.find(n => n.id === numId);
+    if (!camp || !num) return;
+
+    document.getElementById('edit-numcamp-camp-id').value = campId;
+    document.getElementById('edit-numcamp-num-id').value = numId;
+
+    document.getElementById('edit-numcamp-nome-preview').innerText = num.nome || 'Sem Nome';
+    document.getElementById('edit-numcamp-numero-preview').innerText = num.numero || '';
+
+    document.getElementById('edit-numcamp-grupo').value = grupoAtual || 'NORMAL';
+    document.getElementById('edit-numcamp-funcao').value = num.funcao || 'Envios';
+
+    const modal = document.getElementById('modal-editar-numero-campanha');
+    if (modal) modal.style.display = 'flex';
+}
+
+function fecharModalEditarNumeroCampanha() {
+    const modal = document.getElementById('modal-editar-numero-campanha');
+    if (modal) modal.style.display = 'none';
+}
+
+async function salvarEdicaoNumeroCampanha(e) {
+    e.preventDefault();
+
+    const campId = Number(document.getElementById('edit-numcamp-camp-id').value);
+    const numId = Number(document.getElementById('edit-numcamp-num-id').value);
+    const novoGrupo = document.getElementById('edit-numcamp-grupo').value;
+    const novaFuncao = document.getElementById('edit-numcamp-funcao').value;
+
+    const camp = listaCampanhas.find(c => c.id === campId);
+    const num = listaNumerosGeral.find(n => n.id === numId);
+    if (!camp || !num) return;
+
+    // 1. Atualiza a função no chip (cnc_numeros_controle) se tiver mudado
+    if (num.funcao !== novaFuncao) {
+        num.funcao = novaFuncao;
+        await DB.numerosControle.salvar(num);
+    }
+
+    // 2. Atualiza o grupo (VIP, NORMAL, AMBOS) na lista de equipes da campanha
+    let alterouGrupo = false;
+    const equipesAtualizadas = (camp.equipes || []).map(item => {
+        let idStr = item;
+        if (typeof item === 'string' && item.includes(':')) {
+            idStr = item.split(':')[0];
+        }
+        if (String(idStr) === String(numId) || idStr === num.nome) {
+            alterouGrupo = true;
+            return `${numId}:${novoGrupo}`;
+        }
+        return item;
+    });
+
+    if (!alterouGrupo) {
+        equipesAtualizadas.push(`${numId}:${novoGrupo}`);
+    }
+
+    camp.equipes = equipesAtualizadas;
+    await DB.campanhas.salvar(camp);
+
+    fecharModalEditarNumeroCampanha();
+    await carregarDadosCampanhas();
 }
 
 async function excluirCampanha(id) {
