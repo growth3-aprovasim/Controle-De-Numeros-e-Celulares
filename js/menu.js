@@ -39,7 +39,7 @@
                 <span class="material-icons-round">grid_view</span> Mapa de Aparelhos
             </a>
             <a href="${basePath}pages/api.html" class="menu-item ${currentPage === 'api.html' ? 'active' : ''}">
-                <span class="material-icons-round">hub</span> Webhook & Integrações
+                <span class="material-icons-round">hub</span> Webhook
             </a>
         </nav>
     `;
