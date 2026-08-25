@@ -1,12 +1,14 @@
 // js/script-celulares.js
 
 let listaChips = []; 
+let listaCampanhas = [];
 let colunaAtual = 'nome';
 let ordemCrescente = true; 
 
 async function carregarDadosDoBanco() {
     try {
         listaChips = (await DB.numerosControle.listar()) || [];
+        listaCampanhas = (await DB.campanhas.listar()) || [];
         atualizarDropdownsFiltroUnnichat();
         ordenarPor(colunaAtual, true);
     } catch (erro) {
@@ -195,8 +197,10 @@ function filtrarTodosChips() {
 
     // Separar chips por plataforma
     const chipsSendflow = listaChips.filter(item => {
-        const isUnnichat = item.plataforma === 'Unnichat' || item.equipe === 'UNNICHAT';
-        if (isUnnichat) return false;
+        const isOutraPlat = item.plataforma === 'Unnichat' || item.equipe === 'UNNICHAT' ||
+                            item.plataforma === 'Vagos' || item.equipe === 'VAGOS' ||
+                            item.plataforma === 'Aquecimento' || item.equipe === 'AQUECIMENTO';
+        if (isOutraPlat) return false;
 
         if (statusVal && item.atividade !== statusVal) return false;
         if (funcaoVal && item.funcao !== funcaoVal) return false;
@@ -236,8 +240,45 @@ function filtrarTodosChips() {
         return true;
     });
 
+    const chipsVagos = listaChips.filter(item => {
+        const isVago = item.plataforma === 'Vagos' || item.equipe === 'VAGOS';
+        if (!isVago) return false;
+
+        if (termo) {
+            const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
+            const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchAtividade = item.atividade && item.atividade.toLowerCase().includes(termo);
+            const matchJuizo = item.juizo && item.juizo.toLowerCase().includes(termo);
+            if (!matchNome && !matchNumero && !matchAtividade && !matchJuizo) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    const chipsAquecimento = listaChips.filter(item => {
+        const isAquecimento = item.plataforma === 'Aquecimento' || item.equipe === 'AQUECIMENTO';
+        if (!isAquecimento) return false;
+
+        if (termo) {
+            const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
+            const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchAtividade = item.atividade && item.atividade.toLowerCase().includes(termo);
+            const matchFuncao = item.funcao && item.funcao.toLowerCase().includes(termo);
+            const matchJuizo = item.juizo && item.juizo.toLowerCase().includes(termo);
+            if (!matchNome && !matchNumero && !matchAtividade && !matchFuncao && !matchJuizo) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
     renderizarTabelaSendflow(chipsSendflow);
     renderizarTabelaUnnichat(chipsUnnichat);
+    renderizarTabelaVagos(chipsVagos);
+    renderizarTabelaAquecimento(chipsAquecimento);
 }
 
 function limparFiltrosSendflow() {
@@ -270,7 +311,26 @@ function renderizarTabelaSendflow(dados) {
     dados.forEach(chip => {
         let classAtiv = obterClasseAtividade(chip.atividade);
         let classFunc = obterClasseFuncao(chip.funcao);
-        let classQual = obterClasseQualidade(chip.qualidade);
+
+        // Buscar campanhas em que o chip está vinculado
+        const campsDoChip = listaCampanhas.filter(camp => {
+            return (camp.equipes || []).some(item => {
+                let idStr = item;
+                if (typeof item === 'string' && item.includes(':')) idStr = item.split(':')[0];
+                return String(idStr) === String(chip.id) || idStr === chip.nome;
+            });
+        });
+
+        let campanhasHTML = '';
+        if (campsDoChip.length > 0) {
+            campanhasHTML = `<div style="display: flex; flex-wrap: wrap; gap: 4px; max-width: 220px;">`;
+            campsDoChip.forEach(c => {
+                campanhasHTML += `<span class="badge" style="font-size: 10px; padding: 2px 6px; background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;" title="${c.nome}">${c.nome}</span>`;
+            });
+            campanhasHTML += `</div>`;
+        } else {
+            campanhasHTML = `<span style="font-size: 11px; color: var(--texto-muted); font-style: italic;">Nenhuma</span>`;
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -278,7 +338,7 @@ function renderizarTabelaSendflow(dados) {
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classFunc}">${chip.funcao || 'Reserva'}</span></td>
-            <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classQual}">${chip.qualidade || 'Média'}</span></td>
+            <td style="padding: 15px 20px; text-align: left;">${campanhasHTML}</td>
             <td style="padding: 15px 20px; text-align: center; font-weight: bold; color: ${chip.bans > 0 ? '#ef4444' : 'var(--texto-muted)'};">${chip.bans !== undefined ? chip.bans : 0}</td>
             <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
                 <button class="btn-icon" title="Ver Histórico nas Campanhas" onclick="abrirHistoricoChip(${chip.id})" style="color: var(--laranja-brabo);">
@@ -341,6 +401,82 @@ function renderizarTabelaUnnichat(dados) {
     });
 }
 
+// --- RENDERIZAÇÃO DA TABELA NÚMEROS VAGOS ---
+function renderizarTabelaVagos(dados) {
+    const tbody = document.getElementById('tabela-chips-vagos');
+    const badgeContador = document.getElementById('badge-contador-vagos');
+    if (badgeContador) badgeContador.innerText = `${dados.length} números`;
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número vago encontrado.</td></tr>`;
+        return;
+    }
+
+    dados.forEach(chip => {
+        let classAtiv = obterClasseAtividade(chip.atividade);
+        const obsTexto = chip.juizo || '-';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
+            <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
+            <td style="padding: 15px 20px; color: var(--texto-muted); font-size: 12px;">${obsTexto}</td>
+            <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn-icon" title="Editar" onclick="abrirModalChip(${chip.id})">
+                    <span class="material-icons-round">edit</span>
+                </button>
+                <button class="btn-icon" title="Remover" onclick="removerChip(${chip.id})" style="color: #ef4444;">
+                    <span class="material-icons-round">delete</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// --- RENDERIZAÇÃO DA TABELA NÚMEROS EM AQUECIMENTO ---
+function renderizarTabelaAquecimento(dados) {
+    const tbody = document.getElementById('tabela-chips-aquecimento');
+    const badgeContador = document.getElementById('badge-contador-aquecimento');
+    if (badgeContador) badgeContador.innerText = `${dados.length} números`;
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número em aquecimento encontrado.</td></tr>`;
+        return;
+    }
+
+    dados.forEach(chip => {
+        let classAtiv = obterClasseAtividade(chip.atividade);
+        let classFunc = obterClasseFuncao(chip.funcao);
+        const obsTexto = chip.juizo || '-';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
+            <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
+            <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classFunc}">${chip.funcao || 'Envios'}</span></td>
+            <td style="padding: 15px 20px; color: var(--texto-muted); font-size: 12px;">${obsTexto}</td>
+            <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn-icon" title="Editar" onclick="abrirModalChip(${chip.id})">
+                    <span class="material-icons-round">edit</span>
+                </button>
+                <button class="btn-icon" title="Remover" onclick="removerChip(${chip.id})" style="color: #ef4444;">
+                    <span class="material-icons-round">delete</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 // --- CONTROLE DOS CAMPOS DINÂMICOS DO MODAL ---
 function alternarCamposPlataforma() {
     const plat = document.getElementById('edit-plataforma').value;
@@ -386,14 +522,23 @@ function abrirModalChip(id = null) {
         const chip = listaChips.find(c => c.id === chipId || c.id === id);
         if (!chip) return;
 
-        const plat = chip.plataforma === 'Unnichat' || chip.equipe === 'UNNICHAT' ? 'Unnichat' : 'Sendflow';
+        let plat = 'Sendflow';
+        if (chip.plataforma) {
+            plat = chip.plataforma;
+        } else if (chip.equipe === 'UNNICHAT') {
+            plat = 'Unnichat';
+        } else if (chip.equipe === 'VAGOS') {
+            plat = 'Vagos';
+        } else if (chip.equipe === 'AQUECIMENTO') {
+            plat = 'Aquecimento';
+        }
 
         if (document.getElementById('edit-id')) document.getElementById('edit-id').value = chip.id;
         if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = plat;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = chip.nome || '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = chip.numero || '';
         
-        // Campos Sendflow
+        // Campos Sendflow / Vagos / Aquecimento
         configurarSelectAtividade(chip.atividade || 'Disponível');
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = chip.funcao || 'Envios';
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = chip.qualidade || 'Alta';
@@ -504,9 +649,14 @@ if (formChip) {
 
         fecharModalChip();
 
+        let equipeSalvar = 'SENDFLOW';
+        if (plataformaForm === 'Unnichat') equipeSalvar = 'UNNICHAT';
+        else if (plataformaForm === 'Vagos') equipeSalvar = 'VAGOS';
+        else if (plataformaForm === 'Aquecimento') equipeSalvar = 'AQUECIMENTO';
+
         const itemAtualizado = await DB.numerosControle.salvar({
             id: idAtual,
-            equipe: plataformaForm === 'Unnichat' ? 'UNNICHAT' : 'SENDFLOW',
+            equipe: equipeSalvar,
             plataforma: plataformaForm,
             nome: nomeForm,
             numero: numeroForm,

@@ -93,9 +93,13 @@ function aplicarFiltroCampanhaAnalytics() {
     const taxaSaude = totalBase > 0 ? Math.round(((totalEmUso + totalDisponivel) / totalBase) * 100) : 0;
 
     if (document.getElementById('kpi-total-base')) document.getElementById('kpi-total-base').innerText = totalBase;
-    if (document.getElementById('kpi-total-vip')) document.getElementById('kpi-total-vip').innerText = totalChipsNoVip;
+    if (document.getElementById('kpi-total-uso')) document.getElementById('kpi-total-uso').innerText = totalEmUso;
+    if (document.getElementById('kpi-total-disponivel')) document.getElementById('kpi-total-disponivel').innerText = totalDisponivel;
     if (document.getElementById('kpi-total-analise')) document.getElementById('kpi-total-analise').innerText = totalAnalise;
+    if (document.getElementById('kpi-total-reconectar')) document.getElementById('kpi-total-reconectar').innerText = totalReconectar;
+    if (document.getElementById('kpi-total-banidos')) document.getElementById('kpi-total-banidos').innerText = totalBanidos;
     if (document.getElementById('kpi-total-bans')) document.getElementById('kpi-total-bans').innerText = somaTotalBans;
+    if (document.getElementById('kpi-total-vip')) document.getElementById('kpi-total-vip').innerText = totalChipsNoVip;
     if (document.getElementById('kpi-taxa-saude')) document.getElementById('kpi-taxa-saude').innerText = `${taxaSaude}%`;
 
     // 2. PROCESSAR DADOS DAS CAMPANHAS

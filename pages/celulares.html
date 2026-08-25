@@ -206,9 +206,9 @@
                                         FUNÇÃO <span class="material-icons-round" id="icone-ordem-funcao" style="font-size: 16px;">sort</span>
                                     </div>
                                 </th>
-                                <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('qualidade')">
-                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
-                                        QUALIDADE <span class="material-icons-round" id="icone-ordem-qualidade" style="font-size: 16px;">sort</span>
+                                <th style="padding: 15px 20px; text-align: left;">
+                                    <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
+                                        CAMPANHAS
                                     </div>
                                 </th>
                                 <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('bans')">
@@ -258,6 +258,71 @@
                 </div>
             </div>
 
+            <!-- TABELA 3: NÚMEROS VAGOS (EXPANSÍVEL) -->
+            <div id="card-tabela-vagos" class="equipe-card" style="padding: 0; overflow: hidden; margin-bottom: 0; border: 1px solid rgba(148, 163, 184, 0.4);">
+                <div class="tabela-colapsavel-header" onclick="alternarColapso('card-tabela-vagos')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: #94a3b8; font-size: 24px;">inbox</span>
+                        <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números Vagos</h3>
+                        <span id="badge-contador-vagos" class="badge" style="background-color: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); font-size: 11px;">0 números</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; color: var(--texto-muted);">Clique para expandir/recolher</span>
+                        <span class="material-icons-round chevron-toggle">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="tabela-corpo-wrapper">
+                    <table>
+                        <thead style="background-color: var(--bg-secundario); user-select: none;">
+                            <tr>
+                                <th style="padding: 15px 20px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
+                                <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: center;">ATIVIDADE</th>
+                                <th style="padding: 15px 20px; text-align: left;">OBSERVAÇÕES</th>
+                                <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-chips-vagos">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABELA 4: NÚMEROS EM AQUECIMENTO (EXPANSÍVEL) -->
+            <div id="card-tabela-aquecimento" class="equipe-card" style="padding: 0; overflow: hidden; margin-bottom: 0; border: 1px solid rgba(249, 115, 22, 0.4);">
+                <div class="tabela-colapsavel-header" onclick="alternarColapso('card-tabela-aquecimento')">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="material-icons-round" style="color: #f97316; font-size: 24px;">local_fire_department</span>
+                        <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números em Aquecimento</h3>
+                        <span id="badge-contador-aquecimento" class="badge" style="background-color: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); font-size: 11px;">0 números</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12px; color: var(--texto-muted);">Clique para expandir/recolher</span>
+                        <span class="material-icons-round chevron-toggle">expand_more</span>
+                    </div>
+                </div>
+
+                <div class="tabela-corpo-wrapper">
+                    <table>
+                        <thead style="background-color: var(--bg-secundario); user-select: none;">
+                            <tr>
+                                <th style="padding: 15px 20px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
+                                <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: center;">ATIVIDADE</th>
+                                <th style="padding: 15px 20px; text-align: center;">FUNÇÃO</th>
+                                <th style="padding: 15px 20px; text-align: left;">OBSERVAÇÕES</th>
+                                <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-chips-aquecimento">
+                            <!-- Renderizado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </section>
     </main>
 
@@ -277,6 +342,8 @@
                     <select id="edit-plataforma" onchange="alternarCamposPlataforma()" style="font-weight: 600;">
                         <option value="Sendflow">📡 Sendflow</option>
                         <option value="Unnichat">💬 Unnichat</option>
+                        <option value="Vagos">⚪ Números Vagos</option>
+                        <option value="Aquecimento">🔥 Números em Aquecimento</option>
                     </select>
                 </div>
 
