@@ -8,6 +8,7 @@ let mapNumerosSelecionados = new Map();
 async function carregarDadosCampanhas() {
     try {
         listaCampanhas = (await DB.campanhas.listar()) || [];
+        listaCampanhas.sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
         listaNumerosGeral = (await DB.numerosControle.listar()) || [];
         renderizarCampanhas();
     } catch (erro) {
@@ -103,7 +104,7 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
                 const grp = item.grupo;
 
                 let classAtiv = obterClasseAtividadeCampanha(num.atividade);
-                let classFunc = num.funcao === 'Envios' ? 'bg-func-envios' : (num.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
+                let classFunc = num.funcao === 'Envios' ? 'bg-func-envios' : (num.funcao === 'Criador' ? 'bg-func-criador' : (num.funcao === 'Espião' ? 'bg-func-espiao' : 'bg-func-reserva'));
                 let iconeCapitao = num.isCapitao ? '<span title="Capitão" style="font-size: 14px; margin-right: 4px;">👑</span>' : '';
 
                 let badgeGrupo = '';
@@ -570,7 +571,7 @@ if (formCampanha) {
         });
 
         if (idAtual === null) {
-            listaCampanhas.push(campSalva);
+            listaCampanhas.unshift(campSalva);
         } else {
             const idx = listaCampanhas.findIndex(c => c.id === idAtual);
             if (idx !== -1) listaCampanhas[idx] = campSalva;

@@ -6,6 +6,9 @@ async function carregarDashboard() {
         const campanhas = (await DB.campanhas.listar()) || [];
         const aparelhos = (await DB.mapaAparelhos.listar()) || [];
 
+        // Garante ordenação padrão: mais recente para a mais velha
+        campanhas.sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+
         // Filtra estritamente as campanhas ativas (Em Andamento)
         let campanhasAtivasLista = campanhas.filter(c => c.status === 'Em Andamento');
         if (campanhasAtivasLista.length === 0) {
@@ -177,7 +180,7 @@ function renderizarCampanhasDashboard(campanhasAtivasOuTodas, todosNumeros) {
                         badgeGrupoHTML = `<span class="badge badge-ambos" style="font-size: 10px; padding: 2px 6px;">👑 Ambos</span>`;
                     }
 
-                    let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
+                    let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : (chip.funcao === 'Espião' ? 'bg-func-espiao' : 'bg-func-reserva'));
 
                     html += `
                         <div style="background-color: ${bgCard}; border: ${borderStyle}; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
@@ -301,11 +304,13 @@ function renderizarInsights(numeros, aparelhos, campanhas = []) {
     if (containerFuncoes) {
         const envios = numeros.filter(n => n.funcao === 'Envios').length;
         const criador = numeros.filter(n => n.funcao === 'Criador').length;
+        const espiao = numeros.filter(n => n.funcao === 'Espião').length;
         const reserva = numeros.filter(n => n.funcao === 'Reserva').length;
 
         containerFuncoes.innerHTML = `
             <div style="display: flex; justify-content: space-between;"><span>Números para Envios:</span> <b style="color: #60a5fa;">${envios}</b></div>
             <div style="display: flex; justify-content: space-between;"><span>Números Criadores:</span> <b style="color: #c084fc;">${criador}</b></div>
+            <div style="display: flex; justify-content: space-between;"><span>Números Espiões:</span> <b style="color: #2dd4bf;">${espiao}</b></div>
             <div style="display: flex; justify-content: space-between;"><span>Números de Reserva:</span> <b style="color: #fcd34d;">${reserva}</b></div>
         `;
     }

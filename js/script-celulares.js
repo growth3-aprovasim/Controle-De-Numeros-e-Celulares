@@ -161,6 +161,16 @@ function obterClasseQualidade(qualidade) {
     }
 }
 
+function obterClasseFuncao(funcao) {
+    switch (funcao) {
+        case 'Envios': return 'bg-func-envios';
+        case 'Criador': return 'bg-func-criador';
+        case 'Espião': return 'bg-func-espiao';
+        case 'Reserva': return 'bg-func-reserva';
+        default: return 'bg-func-reserva';
+    }
+}
+
 // --- FILTRO AVANÇADO UNIFICADO ---
 function filtrarTodosChips() {
     const inputFiltro = document.getElementById('input-filtro-chips');
@@ -259,7 +269,7 @@ function renderizarTabelaSendflow(dados) {
 
     dados.forEach(chip => {
         let classAtiv = obterClasseAtividade(chip.atividade);
-        let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
+        let classFunc = obterClasseFuncao(chip.funcao);
         let classQual = obterClasseQualidade(chip.qualidade);
 
         const tr = document.createElement('tr');

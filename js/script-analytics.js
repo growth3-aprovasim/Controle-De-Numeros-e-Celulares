@@ -107,10 +107,12 @@ function aplicarFiltroCampanhaAnalytics() {
     // Contadores para o gráfico combinado de funções (Alocados vs Em Uso)
     let alocadosEnvios = 0;
     let alocadosCriador = 0;
+    let alocadosEspiao = 0;
     let alocadosReserva = 0;
 
     let emUsoEnvios = 0;
     let emUsoCriador = 0;
+    let emUsoEspiao = 0;
     let emUsoReserva = 0;
 
     const dadosTabelaCampanhas = campanhasFiltradas.map(camp => {
@@ -141,12 +143,14 @@ function aplicarFiltroCampanhaAnalytics() {
                 const func = numObj.funcao || 'Reserva';
                 if (func === 'Envios') alocadosEnvios++;
                 else if (func === 'Criador') alocadosCriador++;
+                else if (func === 'Espião') alocadosEspiao++;
                 else alocadosReserva++;
 
                 if (numObj.atividade === 'Em Uso') {
                     reaisEmUso++;
                     if (func === 'Envios') emUsoEnvios++;
                     else if (func === 'Criador') emUsoCriador++;
+                    else if (func === 'Espião') emUsoEspiao++;
                     else emUsoReserva++;
                 }
             }
@@ -175,8 +179,8 @@ function aplicarFiltroCampanhaAnalytics() {
     // 3. RENDERIZAR GRÁFICOS
     renderizarGraficoCampanhasColunas(nomesCampanhas, dataVip, dataAmbos, dataNormal);
     renderizarGraficoFuncaoAlocadoUso(
-        [alocadosEnvios, alocadosCriador, alocadosReserva],
-        [emUsoEnvios, emUsoCriador, emUsoReserva]
+        [alocadosEnvios, alocadosCriador, alocadosEspiao, alocadosReserva],
+        [emUsoEnvios, emUsoCriador, emUsoEspiao, emUsoReserva]
     );
     renderizarGraficoStatus(totalDisponivel, totalEmUso, totalAnalise, totalReconectar, totalBanidos);
 
@@ -255,7 +259,7 @@ function renderizarGraficoFuncaoAlocadoUso(alocados, emUso) {
     chartFuncaoAlocadoUsoInst = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Envios', 'Criador', 'Reserva'],
+            labels: ['Envios', 'Criador', 'Espião', 'Reserva'],
             datasets: [
                 {
                     label: '📋 Números Alocados (Planejado)',

@@ -275,7 +275,7 @@ window.DB = {
         listar: async function() {
             const sb = await getSupabase();
             if (!sb) return [];
-            const { data, error } = await sb.from('cnc_campanhas').select('*').order('id', { ascending: true });
+            const { data, error } = await sb.from('cnc_campanhas').select('*').order('id', { ascending: false });
             if (error || !data) { console.error("Erro ao listar campanhas:", error); return []; }
             return data;
         },
