@@ -116,7 +116,8 @@ window.DB = {
                     expert: item.expert || ["Mateus"],
                     isCapitao: !!item.is_capitao,
                     bm: bm,
-                    target: target
+                    target: target,
+                    data_inicio_aquecimento: item.data_inicio_aquecimento || null
                 };
             });
         },
@@ -146,17 +147,19 @@ window.DB = {
                 expert: Array.isArray(item.expert) ? item.expert : [item.expert || "Mateus"],
                 is_capitao: !!item.isCapitao,
                 bm: item.bm || "",
-                target: item.target || ""
+                target: item.target || "",
+                data_inicio_aquecimento: item.data_inicio_aquecimento || null
             };
 
             if (!item.id) {
                 const { data, error } = await sb.from('cnc_numeros_controle').insert([payload]).select();
                 if (error) {
                     console.error("Tentando inserção com fallback:", error);
-                    // Fallback caso as colunas bm/target/plataforma ainda não existam no Supabase
+                    // Fallback caso as colunas bm/target/plataforma/data_inicio_aquecimento ainda não existam no Supabase
                     delete payload.bm;
                     delete payload.target;
                     delete payload.plataforma;
+                    delete payload.data_inicio_aquecimento;
                     const { data: d2, error: err2 } = await sb.from('cnc_numeros_controle').insert([payload]).select();
                     if (err2) console.error("Erro no fallback de inserção:", err2);
                     return d2 && d2[0] ? { ...item, id: d2[0].id } : item;
@@ -170,6 +173,7 @@ window.DB = {
                     delete payload.bm;
                     delete payload.target;
                     delete payload.plataforma;
+                    delete payload.data_inicio_aquecimento;
                     await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
                 }
                 return item;
