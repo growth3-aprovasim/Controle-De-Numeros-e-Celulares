@@ -312,6 +312,7 @@
                                 <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
                                 <th style="padding: 15px 20px; text-align: center;">ATIVIDADE</th>
                                 <th style="padding: 15px 20px; text-align: center;">FUNÇÃO</th>
+                                <th style="padding: 15px 20px; text-align: center;">DIAS AQUECENDO</th>
                                 <th style="padding: 15px 20px; text-align: left;">OBSERVAÇÕES</th>
                                 <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
                             </tr>
@@ -393,6 +394,16 @@
                         <div class="form-group">
                             <label>Juízo Final (Opcional)</label>
                             <input type="text" id="edit-juizo" placeholder="Observações...">
+                        </div>
+
+                        <!-- Campo de Início do Aquecimento (visível apenas para plataforma Aquecimento) -->
+                        <div class="form-group" id="campo-data-aquecimento" style="display: none;">
+                            <label style="color: #f97316; display: flex; align-items: center; gap: 6px;">
+                                <span class="material-icons-round" style="font-size: 16px;">local_fire_department</span>
+                                Dia de Início do Aquecimento
+                            </label>
+                            <input type="date" id="edit-data-inicio-aquecimento"
+                                style="border-color: rgba(249, 115, 22, 0.4); color: var(--texto-claro); background-color: var(--bg-secundario);">
                         </div>
                     </div>
 

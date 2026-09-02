@@ -438,6 +438,18 @@ function renderizarTabelaVagos(dados) {
     });
 }
 
+// --- CÁLCULO DE DIAS AQUECENDO ---
+function calcularDiasAquecendo(dataInicio) {
+    if (!dataInicio) return null;
+    const inicio = new Date(dataInicio + 'T00:00:00');
+    if (isNaN(inicio.getTime())) return null;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const diffMs = hoje - inicio;
+    const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return dias >= 0 ? dias : 0;
+}
+
 // --- RENDERIZAÇÃO DA TABELA NÚMEROS EM AQUECIMENTO ---
 function renderizarTabelaAquecimento(dados) {
     const tbody = document.getElementById('tabela-chips-aquecimento');
@@ -448,7 +460,7 @@ function renderizarTabelaAquecimento(dados) {
     tbody.innerHTML = '';
 
     if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número em aquecimento encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número em aquecimento encontrado.</td></tr>`;
         return;
     }
 
@@ -457,12 +469,36 @@ function renderizarTabelaAquecimento(dados) {
         let classFunc = obterClasseFuncao(chip.funcao);
         const obsTexto = chip.juizo || '-';
 
+        // Calcular dias aquecendo
+        const diasAquecendo = calcularDiasAquecendo(chip.data_inicio_aquecimento);
+        let diasHTML;
+        if (diasAquecendo === null) {
+            diasHTML = `<span style="font-size: 11px; color: var(--texto-muted); font-style: italic;">—</span>`;
+        } else {
+            // Cor progressiva: verde < 7 dias, amarelo 7-14, laranja > 14
+            let corDias = '#10b981';
+            let iconeDias = 'local_fire_department';
+            if (diasAquecendo >= 14) {
+                corDias = '#f97316';
+            } else if (diasAquecendo >= 7) {
+                corDias = '#f59e0b';
+            }
+            diasHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <span class="material-icons-round" style="font-size: 14px; color: ${corDias};">${iconeDias}</span>
+                    <b style="font-size: 15px; color: ${corDias};">${diasAquecendo}</b>
+                    <span style="font-size: 11px; color: var(--texto-muted);">${diasAquecendo === 1 ? 'dia' : 'dias'}</span>
+                </div>
+            `;
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classFunc}">${chip.funcao || 'Envios'}</span></td>
+            <td style="padding: 15px 20px; text-align: center;">${diasHTML}</td>
             <td style="padding: 15px 20px; color: var(--texto-muted); font-size: 12px;">${obsTexto}</td>
             <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
                 <button class="btn-icon" title="Editar" onclick="abrirModalChip(${chip.id})">
@@ -482,13 +518,19 @@ function alternarCamposPlataforma() {
     const plat = document.getElementById('edit-plataforma').value;
     const boxSendflow = document.getElementById('campos-sendflow');
     const boxUnnichat = document.getElementById('campos-unnichat');
+    const boxDataAquecimento = document.getElementById('campo-data-aquecimento');
 
     if (plat === 'Unnichat') {
         if (boxSendflow) boxSendflow.style.display = 'none';
         if (boxUnnichat) boxUnnichat.style.display = 'grid';
+        if (boxDataAquecimento) boxDataAquecimento.style.display = 'none';
     } else {
         if (boxSendflow) boxSendflow.style.display = 'grid';
         if (boxUnnichat) boxUnnichat.style.display = 'none';
+        // Mostrar campo de data apenas para Aquecimento
+        if (boxDataAquecimento) {
+            boxDataAquecimento.style.display = (plat === 'Aquecimento') ? 'block' : 'none';
+        }
     }
 }
 
@@ -543,6 +585,11 @@ function abrirModalChip(id = null) {
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = chip.funcao || 'Envios';
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = chip.qualidade || 'Alta';
         if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = chip.juizo || '';
+
+        // Campo de data de início do aquecimento
+        if (document.getElementById('edit-data-inicio-aquecimento')) {
+            document.getElementById('edit-data-inicio-aquecimento').value = chip.data_inicio_aquecimento || '';
+        }
         
         // Campos Unnichat
         if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = chip.bm || '';
@@ -560,6 +607,11 @@ function abrirModalChip(id = null) {
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = 'Envios';
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = 'Alta';
         if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = '';
+
+        // Limpar data de início do aquecimento
+        if (document.getElementById('edit-data-inicio-aquecimento')) {
+            document.getElementById('edit-data-inicio-aquecimento').value = '';
+        }
         
         if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = '';
         if (document.getElementById('edit-target')) document.getElementById('edit-target').value = '';
@@ -597,6 +649,7 @@ if (formChip) {
 
         const bmForm = document.getElementById('edit-bm') ? document.getElementById('edit-bm').value.trim() : '';
         const targetForm = document.getElementById('edit-target') ? document.getElementById('edit-target').value.trim() : '';
+        const dataInicioAquecimentoForm = document.getElementById('edit-data-inicio-aquecimento') ? document.getElementById('edit-data-inicio-aquecimento').value : '';
 
         const idAtual = idValue === '' ? null : Number(idValue);
 
@@ -667,6 +720,7 @@ if (formChip) {
             juizo: juizoForm,
             bm: bmForm,
             target: targetForm,
+            data_inicio_aquecimento: plataformaForm === 'Aquecimento' ? (dataInicioAquecimentoForm || null) : null,
             statusEquipe: "Disponível",
             expert: ["Mateus"]
         });
