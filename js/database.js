@@ -88,26 +88,31 @@ window.DB = {
                 let bm = item.bm || "";
                 let target = item.target || "";
                 let dataInicio = item.data_inicio_aquecimento || null;
-                let juizoTexto = item.juizo || "";
-                
-                // Fallback inteligente para recuperar BM, Target e Data de Aquecimento caso estejam serializados no juizo
-                if (item.juizo && typeof item.juizo === 'string') {
-                    try {
-                        const parsed = JSON.parse(item.juizo);
-                        if (parsed && typeof parsed === 'object') {
-                            if (!bm && parsed.bm) bm = parsed.bm;
-                            if (!target && parsed.target) target = parsed.target;
-                            if (!dataInicio && parsed.data_inicio_aquecimento) dataInicio = parsed.data_inicio_aquecimento;
-                            if (parsed.obs !== undefined) juizoTexto = parsed.obs;
-                        }
-                    } catch (e) {}
+                let juizoTexto = "";
+
+                if (typeof item.juizo === 'string') {
+                    juizoTexto = item.juizo;
+                    if (item.juizo.trim().startsWith('{') || item.juizo.trim().startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(item.juizo);
+                            if (parsed && typeof parsed === 'object') {
+                                if (!bm && parsed.bm) bm = String(parsed.bm);
+                                if (!target && parsed.target) target = String(parsed.target);
+                                if (!dataInicio && parsed.data_inicio_aquecimento) dataInicio = String(parsed.data_inicio_aquecimento);
+                                if (parsed.obs !== undefined) juizoTexto = String(parsed.obs || "");
+                            }
+                        } catch (e) {}
+                    }
+                } else if (item.juizo !== null && item.juizo !== undefined) {
+                    juizoTexto = String(item.juizo);
                 }
 
-                const isUnnichat = item.plataforma === "Unnichat" || item.equipe === "UNNICHAT" || item.equipe === "Unnichat" || (item.juizo && item.juizo.includes('"bm"'));
-                const isAquecimento = item.plataforma === "Aquecimento" || item.equipe === "AQUECIMENTO" || item.equipe === "Aquecimento" || (item.juizo && item.juizo.includes('"data_inicio_aquecimento"'));
+                const juizoStrCheck = typeof item.juizo === 'string' ? item.juizo : '';
+                const isUnnichat = item.plataforma === "Unnichat" || item.equipe === "UNNICHAT" || item.equipe === "Unnichat" || juizoStrCheck.includes('"bm"');
+                const isAquecimento = item.plataforma === "Aquecimento" || item.equipe === "AQUECIMENTO" || item.equipe === "Aquecimento" || juizoStrCheck.includes('"data_inicio_aquecimento"');
                 const isVagos = item.plataforma === "Vagos" || item.equipe === "VAGOS" || item.equipe === "Vagos";
 
-                let plataformaResolvida = item.plataforma;
+                let plataformaResolvida = item.plataforma || "";
                 if (!plataformaResolvida) {
                     if (isUnnichat) plataformaResolvida = "Unnichat";
                     else if (isAquecimento) plataformaResolvida = "Aquecimento";
@@ -115,7 +120,7 @@ window.DB = {
                     else plataformaResolvida = "Sendflow";
                 }
 
-                let equipeResolvida = item.equipe;
+                let equipeResolvida = item.equipe || "";
                 if (!equipeResolvida) {
                     if (isUnnichat) equipeResolvida = "UNNICHAT";
                     else if (isAquecimento) equipeResolvida = "AQUECIMENTO";

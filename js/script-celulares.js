@@ -71,17 +71,17 @@ function ordenarPor(coluna, manterDirecao = false) {
     }
 
     listaChips.sort((a, b) => {
-        let valorA = a[coluna] !== undefined ? a[coluna] : '';
-        let valorB = b[coluna] !== undefined ? b[coluna] : '';
+        let valorA = (a && a[coluna] !== undefined && a[coluna] !== null) ? a[coluna] : '';
+        let valorB = (b && b[coluna] !== undefined && b[coluna] !== null) ? b[coluna] : '';
 
         if (coluna === 'bans') {
-            return ordemCrescente ? Number(valorA) - Number(valorB) : Number(valorB) - Number(valorA);
+            return ordemCrescente ? Number(valorA || 0) - Number(valorB || 0) : Number(valorB || 0) - Number(valorA || 0);
         }
 
         if (coluna === 'nome') {
             let regex = /^([a-zA-Z\s\(\)]*)(\d*)$/;
-            let matchA = valorA.toString().trim().match(regex);
-            let matchB = valorB.toString().trim().match(regex);
+            let matchA = String(valorA).trim().match(regex);
+            let matchB = String(valorB).trim().match(regex);
 
             if (matchA && matchB && matchA[2] !== '' && matchB[2] !== '') {
                 let textoA = matchA[1].toLowerCase();
@@ -95,8 +95,8 @@ function ordenarPor(coluna, manterDirecao = false) {
             }
         }
 
-        let strA = valorA.toString().toLowerCase();
-        let strB = valorB.toString().toLowerCase();
+        let strA = String(valorA).toLowerCase();
+        let strB = String(valorB).toLowerCase();
 
         if (strA < strB) return ordemCrescente ? -1 : 1;
         if (strA > strB) return ordemCrescente ? 1 : -1;
@@ -656,6 +656,10 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = '';
         if (document.getElementById('edit-target')) document.getElementById('edit-target').value = '';
 
+        const titulo = document.getElementById('modal-titulo');
+        if (titulo) titulo.innerText = 'Adicionar Novo Número';
+    }
+
     alternarCamposPlataforma();
     const modal = document.getElementById('modal-chip');
     if (modal) modal.style.display = 'flex';
@@ -922,7 +926,12 @@ function fecharModalHistorico() {
     if (modal) modal.style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarDadosDoBanco();
+        DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosDoBanco());
+    });
+} else {
     carregarDadosDoBanco();
     DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosDoBanco());
-});
+}
