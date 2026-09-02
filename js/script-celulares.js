@@ -441,11 +441,36 @@ function renderizarTabelaVagos(dados) {
 // --- CÁLCULO DE DIAS AQUECENDO ---
 function calcularDiasAquecendo(dataInicio) {
     if (!dataInicio) return null;
-    const inicio = new Date(dataInicio + 'T00:00:00');
-    if (isNaN(inicio.getTime())) return null;
+    let dataStr = String(dataInicio).trim();
+    if (!dataStr) return null;
+
+    // Se vier com timestamp ISO (ex: 2026-09-01T...)
+    if (dataStr.includes('T')) {
+        dataStr = dataStr.split('T')[0];
+    }
+
+    // Se vier no formato brasileiro DD/MM/YYYY
+    if (dataStr.includes('/')) {
+        const partes = dataStr.split('/');
+        if (partes.length === 3) {
+            dataStr = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+        }
+    }
+
+    const partes = dataStr.split('-');
+    if (partes.length !== 3) return null;
+
+    const ano = parseInt(partes[0], 10);
+    const mes = parseInt(partes[1], 10);
+    const dia = parseInt(partes[2], 10);
+    if (isNaN(ano) || isNaN(mes) || isNaN(dia)) return null;
+
+    // Criar datas locais (meia-noite) para evitar desvios de fuso horário
+    const inicio = new Date(ano, mes - 1, dia);
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-    const diffMs = hoje - inicio;
+
+    const diffMs = hoje.getTime() - inicio.getTime();
     const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     return dias >= 0 ? dias : 0;
 }
@@ -475,7 +500,7 @@ function renderizarTabelaAquecimento(dados) {
         if (diasAquecendo === null) {
             diasHTML = `<span style="font-size: 11px; color: var(--texto-muted); font-style: italic;">—</span>`;
         } else {
-            // Cor progressiva: verde < 7 dias, amarelo 7-14, laranja > 14
+            // Cor progressiva: verde < 7 dias, amarelo 7-14, laranja >= 14
             let corDias = '#10b981';
             let iconeDias = 'local_fire_department';
             if (diasAquecendo >= 14) {
@@ -485,8 +510,8 @@ function renderizarTabelaAquecimento(dados) {
             }
             diasHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-                    <span class="material-icons-round" style="font-size: 14px; color: ${corDias};">${iconeDias}</span>
-                    <b style="font-size: 15px; color: ${corDias};">${diasAquecendo}</b>
+                    <span class="material-icons-round" style="font-size: 15px; color: ${corDias};">${iconeDias}</span>
+                    <b style="font-size: 15px; color: ${corDias}; font-weight: 700;">${diasAquecendo}</b>
                     <span style="font-size: 11px; color: var(--texto-muted);">${diasAquecendo === 1 ? 'dia' : 'dias'}</span>
                 </div>
             `;
@@ -515,7 +540,7 @@ function renderizarTabelaAquecimento(dados) {
 
 // --- CONTROLE DOS CAMPOS DINÂMICOS DO MODAL ---
 function alternarCamposPlataforma() {
-    const plat = document.getElementById('edit-plataforma').value;
+    const plat = document.getElementById('edit-plataforma') ? document.getElementById('edit-plataforma').value : 'Sendflow';
     const boxSendflow = document.getElementById('campos-sendflow');
     const boxUnnichat = document.getElementById('campos-unnichat');
     const boxDataAquecimento = document.getElementById('campo-data-aquecimento');
@@ -558,21 +583,24 @@ function configurarSelectAtividade(valorAtual = 'Disponível') {
     elAtividade.value = valorAtual || 'Disponível';
 }
 
-function abrirModalChip(id = null) {
+function abrirModalChip(id = null, plataformaPadrao = null) {
     if (id !== null && id !== undefined) {
         const chipId = Number(id);
         const chip = listaChips.find(c => c.id === chipId || c.id === id);
         if (!chip) return;
 
         let plat = 'Sendflow';
-        if (chip.plataforma) {
-            plat = chip.plataforma;
-        } else if (chip.equipe === 'UNNICHAT') {
-            plat = 'Unnichat';
-        } else if (chip.equipe === 'VAGOS') {
-            plat = 'Vagos';
-        } else if (chip.equipe === 'AQUECIMENTO') {
+        const eqUpper = (chip.equipe || '').toUpperCase();
+        const platNorm = (chip.plataforma || '').toLowerCase();
+
+        if (platNorm === 'aquecimento' || eqUpper === 'AQUECIMENTO') {
             plat = 'Aquecimento';
+        } else if (platNorm === 'unnichat' || eqUpper === 'UNNICHAT') {
+            plat = 'Unnichat';
+        } else if (platNorm === 'vagos' || eqUpper === 'VAGOS') {
+            plat = 'Vagos';
+        } else if (chip.plataforma) {
+            plat = chip.plataforma;
         }
 
         if (document.getElementById('edit-id')) document.getElementById('edit-id').value = chip.id;
@@ -586,9 +614,20 @@ function abrirModalChip(id = null) {
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = chip.qualidade || 'Alta';
         if (document.getElementById('edit-juizo')) document.getElementById('edit-juizo').value = chip.juizo || '';
 
-        // Campo de data de início do aquecimento
+        // Formatar e preencher data de início do aquecimento
+        let dataFormatada = '';
+        if (chip.data_inicio_aquecimento) {
+            let raw = String(chip.data_inicio_aquecimento).trim();
+            if (raw.includes('T')) raw = raw.split('T')[0];
+            if (raw.includes('/')) {
+                const p = raw.split('/');
+                if (p.length === 3) raw = `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+            }
+            dataFormatada = raw;
+        }
+
         if (document.getElementById('edit-data-inicio-aquecimento')) {
-            document.getElementById('edit-data-inicio-aquecimento').value = chip.data_inicio_aquecimento || '';
+            document.getElementById('edit-data-inicio-aquecimento').value = dataFormatada;
         }
         
         // Campos Unnichat
@@ -598,8 +637,9 @@ function abrirModalChip(id = null) {
         const titulo = document.getElementById('modal-titulo');
         if (titulo) titulo.innerText = `Editar Número (${plat})`;
     } else {
+        const platInicial = plataformaPadrao || 'Sendflow';
         if (document.getElementById('edit-id')) document.getElementById('edit-id').value = '';
-        if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = 'Sendflow';
+        if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = platInicial;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = '';
         
@@ -615,10 +655,6 @@ function abrirModalChip(id = null) {
         
         if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = '';
         if (document.getElementById('edit-target')) document.getElementById('edit-target').value = '';
-
-        const titulo = document.getElementById('modal-titulo');
-        if (titulo) titulo.innerText = 'Adicionar Novo Número';
-    }
 
     alternarCamposPlataforma();
     const modal = document.getElementById('modal-chip');

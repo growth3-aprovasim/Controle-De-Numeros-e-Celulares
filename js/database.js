@@ -87,37 +87,59 @@ window.DB = {
             return data.map(item => {
                 let bm = item.bm || "";
                 let target = item.target || "";
+                let dataInicio = item.data_inicio_aquecimento || null;
+                let juizoTexto = item.juizo || "";
                 
-                // Fallback inteligente para recuperar BM e Target caso não estejam em colunas separadas
-                if ((!bm || !target) && item.juizo && typeof item.juizo === 'string') {
+                // Fallback inteligente para recuperar BM, Target e Data de Aquecimento caso estejam serializados no juizo
+                if (item.juizo && typeof item.juizo === 'string') {
                     try {
                         const parsed = JSON.parse(item.juizo);
                         if (parsed && typeof parsed === 'object') {
                             if (!bm && parsed.bm) bm = parsed.bm;
                             if (!target && parsed.target) target = parsed.target;
+                            if (!dataInicio && parsed.data_inicio_aquecimento) dataInicio = parsed.data_inicio_aquecimento;
+                            if (parsed.obs !== undefined) juizoTexto = parsed.obs;
                         }
                     } catch (e) {}
                 }
 
                 const isUnnichat = item.plataforma === "Unnichat" || item.equipe === "UNNICHAT" || item.equipe === "Unnichat" || (item.juizo && item.juizo.includes('"bm"'));
+                const isAquecimento = item.plataforma === "Aquecimento" || item.equipe === "AQUECIMENTO" || item.equipe === "Aquecimento" || (item.juizo && item.juizo.includes('"data_inicio_aquecimento"'));
+                const isVagos = item.plataforma === "Vagos" || item.equipe === "VAGOS" || item.equipe === "Vagos";
+
+                let plataformaResolvida = item.plataforma;
+                if (!plataformaResolvida) {
+                    if (isUnnichat) plataformaResolvida = "Unnichat";
+                    else if (isAquecimento) plataformaResolvida = "Aquecimento";
+                    else if (isVagos) plataformaResolvida = "Vagos";
+                    else plataformaResolvida = "Sendflow";
+                }
+
+                let equipeResolvida = item.equipe;
+                if (!equipeResolvida) {
+                    if (isUnnichat) equipeResolvida = "UNNICHAT";
+                    else if (isAquecimento) equipeResolvida = "AQUECIMENTO";
+                    else if (isVagos) equipeResolvida = "VAGOS";
+                    else equipeResolvida = "SENDFLOW";
+                }
 
                 return {
                     id: item.id,
-                    equipe: item.equipe || (isUnnichat ? "UNNICHAT" : "SENDFLOW"),
-                    plataforma: item.plataforma || (isUnnichat ? "Unnichat" : "Sendflow"),
+                    equipe: equipeResolvida,
+                    plataforma: plataformaResolvida,
                     nome: item.nome || "",
                     numero: item.numero || "",
                     atividade: item.atividade || "Disponível",
                     funcao: item.funcao || "Reserva",
                     bans: item.bans !== undefined && item.bans !== null ? item.bans : 0,
                     qualidade: item.qualidade || "Média",
-                    juizo: item.juizo || "",
+                    juizo: juizoTexto,
                     statusEquipe: item.status_equipe || "Disponível",
                     expert: item.expert || ["Mateus"],
                     isCapitao: !!item.is_capitao,
                     bm: bm,
                     target: target,
-                    data_inicio_aquecimento: item.data_inicio_aquecimento || null
+                    data_inicio_aquecimento: dataInicio
                 };
             });
         },
@@ -125,16 +147,18 @@ window.DB = {
             const sb = await getSupabase();
             if (!sb) return;
             
-            const plataforma = item.plataforma || (item.equipe === "UNNICHAT" ? "Unnichat" : "Sendflow");
+            const plataforma = item.plataforma || (item.equipe === "UNNICHAT" ? "Unnichat" : (item.equipe === "AQUECIMENTO" ? "Aquecimento" : "Sendflow"));
             
-            // Se for Unnichat, empacota BM e Target no juizo como garantia de persistência
+            // Empacota dados adicionais no juizo como garantia de persistência universal
             let juizoFinal = item.juizo || "";
             if (plataforma === "Unnichat") {
                 juizoFinal = JSON.stringify({ bm: item.bm || "", target: item.target || "" });
+            } else if (plataforma === "Aquecimento") {
+                juizoFinal = JSON.stringify({ obs: item.juizo || "", data_inicio_aquecimento: item.data_inicio_aquecimento || "" });
             }
 
             const payload = {
-                equipe: item.equipe || (plataforma === "Unnichat" ? "UNNICHAT" : "SENDFLOW"),
+                equipe: item.equipe || (plataforma === "Unnichat" ? "UNNICHAT" : (plataforma === "Aquecimento" ? "AQUECIMENTO" : (plataforma === "Vagos" ? "VAGOS" : "SENDFLOW"))),
                 plataforma: plataforma,
                 nome: item.nome,
                 numero: item.numero,
@@ -155,7 +179,7 @@ window.DB = {
                 const { data, error } = await sb.from('cnc_numeros_controle').insert([payload]).select();
                 if (error) {
                     console.error("Tentando inserção com fallback:", error);
-                    // Fallback caso as colunas bm/target/plataforma/data_inicio_aquecimento ainda não existam no Supabase
+                    // Fallback caso as colunas opcionais ainda não existam no Supabase
                     delete payload.bm;
                     delete payload.target;
                     delete payload.plataforma;
@@ -169,7 +193,7 @@ window.DB = {
                 const { error } = await sb.from('cnc_numeros_controle').update(payload).eq('id', item.id);
                 if (error) {
                     console.error("Tentando atualização com fallback:", error);
-                    // Fallback caso as colunas ainda não existam no Supabase
+                    // Fallback caso as colunas opcionais ainda não existam no Supabase
                     delete payload.bm;
                     delete payload.target;
                     delete payload.plataforma;

@@ -298,7 +298,10 @@
                         <h3 style="font-size: 16px; margin: 0; color: var(--texto-claro);">Números em Aquecimento</h3>
                         <span id="badge-contador-aquecimento" class="badge" style="background-color: rgba(249, 115, 22, 0.15); color: #f97316; border: 1px solid rgba(249, 115, 22, 0.4); font-size: 11px;">0 números</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button type="button" onclick="event.stopPropagation(); abrirModalChip(null, 'Aquecimento')" style="font-size: 11px; font-weight: 600; padding: 5px 12px; background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.5); color: #f97316; cursor: pointer; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                            <span class="material-icons-round" style="font-size: 14px;">add</span> NOVO AQUECIMENTO
+                        </button>
                         <span style="font-size: 12px; color: var(--texto-muted);">Clique para expandir/recolher</span>
                         <span class="material-icons-round chevron-toggle">expand_more</span>
                     </div>
@@ -397,13 +400,13 @@
                         </div>
 
                         <!-- Campo de Início do Aquecimento (visível apenas para plataforma Aquecimento) -->
-                        <div class="form-group" id="campo-data-aquecimento" style="display: none;">
-                            <label style="color: #f97316; display: flex; align-items: center; gap: 6px;">
-                                <span class="material-icons-round" style="font-size: 16px;">local_fire_department</span>
+                        <div class="form-group" id="campo-data-aquecimento" style="display: none; grid-column: span 2; background: rgba(249, 115, 22, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(249, 115, 22, 0.2);">
+                            <label style="color: #f97316; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                <span class="material-icons-round" style="font-size: 18px;">local_fire_department</span>
                                 Dia de Início do Aquecimento
                             </label>
                             <input type="date" id="edit-data-inicio-aquecimento"
-                                style="border-color: rgba(249, 115, 22, 0.4); color: var(--texto-claro); background-color: var(--bg-secundario);">
+                                style="border-color: rgba(249, 115, 22, 0.4); color: var(--texto-claro); background-color: var(--bg-secundario); font-weight: 500;">
                         </div>
                     </div>
 
