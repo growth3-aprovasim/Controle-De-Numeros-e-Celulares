@@ -1,9 +1,9 @@
 // js/script-celulares.js
 
-let listaChips = []; 
+let listaChips = [];
 let listaCampanhas = [];
 let colunaAtual = 'nome';
-let ordemCrescente = true; 
+let ordemCrescente = true;
 
 async function carregarDadosDoBanco() {
     try {
@@ -104,7 +104,7 @@ function ordenarPor(coluna, manterDirecao = false) {
     });
 
     atualizarIconesOrdenacao();
-    filtrarTodosChips(); 
+    filtrarTodosChips();
 }
 
 function atualizarIconesOrdenacao() {
@@ -198,8 +198,8 @@ function filtrarTodosChips() {
     // Separar chips por plataforma
     const chipsSendflow = listaChips.filter(item => {
         const isOutraPlat = item.plataforma === 'Unnichat' || item.equipe === 'UNNICHAT' ||
-                            item.plataforma === 'Vagos' || item.equipe === 'VAGOS' ||
-                            item.plataforma === 'Aquecimento' || item.equipe === 'AQUECIMENTO';
+            item.plataforma === 'Vagos' || item.equipe === 'VAGOS' ||
+            item.plataforma === 'Aquecimento' || item.equipe === 'AQUECIMENTO';
         if (isOutraPlat) return false;
 
         if (statusVal && item.atividade !== statusVal) return false;
@@ -501,12 +501,12 @@ function renderizarTabelaAquecimento(dados) {
             diasHTML = `<span style="font-size: 11px; color: var(--texto-muted); font-style: italic;">—</span>`;
         } else {
             // Cor progressiva: verde < 7 dias, amarelo 7-14, laranja >= 14
-            let corDias = '#10b981';
+            let corDias = '#b91010ff';
             let iconeDias = 'local_fire_department';
-            if (diasAquecendo >= 14) {
+            if (diasAquecendo >= 7) {
+                corDias = '#10b981';
+            } else if (diasAquecendo >= 3) {
                 corDias = '#f97316';
-            } else if (diasAquecendo >= 7) {
-                corDias = '#f59e0b';
             }
             diasHTML = `
                 <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
@@ -564,7 +564,7 @@ function configurarSelectAtividade(valorAtual = 'Disponível') {
     if (!elAtividade) return;
 
     elAtividade.innerHTML = '';
-    
+
     if (valorAtual === 'Em Uso') {
         const optUso = document.createElement('option');
         optUso.value = 'Em Uso';
@@ -607,7 +607,7 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = plat;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = chip.nome || '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = chip.numero || '';
-        
+
         // Campos Sendflow / Vagos / Aquecimento
         configurarSelectAtividade(chip.atividade || 'Disponível');
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = chip.funcao || 'Envios';
@@ -629,7 +629,7 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-data-inicio-aquecimento')) {
             document.getElementById('edit-data-inicio-aquecimento').value = dataFormatada;
         }
-        
+
         // Campos Unnichat
         if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = chip.bm || '';
         if (document.getElementById('edit-target')) document.getElementById('edit-target').value = chip.target || '';
@@ -642,7 +642,7 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = platInicial;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = '';
-        
+
         configurarSelectAtividade('Disponível');
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = 'Envios';
         if (document.getElementById('edit-qualidade')) document.getElementById('edit-qualidade').value = 'Alta';
@@ -652,7 +652,7 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-data-inicio-aquecimento')) {
             document.getElementById('edit-data-inicio-aquecimento').value = '';
         }
-        
+
         if (document.getElementById('edit-bm')) document.getElementById('edit-bm').value = '';
         if (document.getElementById('edit-target')) document.getElementById('edit-target').value = '';
 
@@ -672,14 +672,14 @@ function fecharModalChip() {
 
 const formChip = document.getElementById('form-chip');
 if (formChip) {
-    formChip.addEventListener('submit', async function(e) {
-        e.preventDefault(); 
-        
+    formChip.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
         const idValue = document.getElementById('edit-id') ? document.getElementById('edit-id').value : '';
         const plataformaForm = document.getElementById('edit-plataforma') ? document.getElementById('edit-plataforma').value : 'Sendflow';
         const nomeForm = document.getElementById('edit-nome') ? document.getElementById('edit-nome').value.trim() : '';
         const numeroForm = document.getElementById('edit-numero') ? document.getElementById('edit-numero').value.trim() : '';
-        
+
         const selectAtividade = document.getElementById('edit-num-atividade');
         let atividadeForm = selectAtividade ? selectAtividade.value : 'Disponível';
 
@@ -697,13 +697,13 @@ if (formChip) {
         const nomeDuplicado = listaChips.find(c => c.nome && c.nome.toLowerCase() === nomeForm.toLowerCase() && c.id !== idAtual);
         if (nomeDuplicado) {
             alert(`❌ Erro: O nome "${nomeForm}" já está cadastrado no sistema!`);
-            return; 
+            return;
         }
 
         const numeroDuplicado = listaChips.find(c => c.numero === numeroForm && c.id !== idAtual);
         if (numeroDuplicado) {
             alert(`❌ Erro: O número ${numeroForm} já está atrelado ao cadastro "${numeroDuplicado.nome}".`);
-            return; 
+            return;
         }
 
         let chipExistente = idAtual !== null ? listaChips.find(c => c.id === idAtual) : null;
