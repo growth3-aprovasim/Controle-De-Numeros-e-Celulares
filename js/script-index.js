@@ -250,16 +250,74 @@ function renderizarCampanhasDashboard(campanhasAtivasOuTodas, todosNumeros) {
             chipsGridHTML = linhasHTML;
         }
 
+        // Função normalizadora para garantir agrupamento correto
+        const normalizarFuncao = (func) => {
+            if (!func) return 'Reserva';
+            const f = String(func).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (f.includes('envio')) return 'Envios';
+            if (f.includes('criador')) return 'Criador';
+            if (f.includes('espia') || f.includes('espiao')) return 'Espião';
+            return 'Reserva';
+        };
+
+        // Contagens por função e grupo (AMBOS conta para VIP e para Normal)
+        let enviosTotal = 0, enviosVip = 0, enviosNormal = 0;
+        let criadorTotal = 0, criadorVip = 0, criadorNormal = 0;
+        let espiaoTotal = 0, espiaoVip = 0, espiaoNormal = 0;
+        let reservaTotal = 0, reservaVip = 0, reservaNormal = 0;
+
+        chipsDetalhados.forEach(c => {
+            const func = normalizarFuncao(c.num.funcao);
+            const grpUpper = String(c.grupo || 'NORMAL').trim().toUpperCase();
+            const isVip = grpUpper === 'VIP' || grpUpper === 'AMBOS';
+            const isNormal = grpUpper === 'NORMAL' || grpUpper === 'AMBOS';
+
+            if (func === 'Envios') {
+                enviosTotal++;
+                if (isVip) enviosVip++;
+                if (isNormal) enviosNormal++;
+            } else if (func === 'Criador') {
+                criadorTotal++;
+                if (isVip) criadorVip++;
+                if (isNormal) criadorNormal++;
+            } else if (func === 'Espião') {
+                espiaoTotal++;
+                if (isVip) espiaoVip++;
+                if (isNormal) espiaoNormal++;
+            } else {
+                reservaTotal++;
+                if (isVip) reservaVip++;
+                if (isNormal) reservaNormal++;
+            }
+        });
+
         let badgesResumo = '';
-        if (totalVip > 0) badgesResumo += `<span class="badge badge-vip" style="font-size: 10px; padding: 2px 6px;">⭐ ${totalVip} VIP</span> `;
-        if (totalAmbos > 0) badgesResumo += `<span class="badge badge-ambos" style="font-size: 10px; padding: 2px 6px;">👑 ${totalAmbos} Ambos</span> `;
-        if (totalNormal > 0) badgesResumo += `<span class="badge badge-normal" style="font-size: 10px; padding: 2px 6px;">📱 ${totalNormal} Normal</span> `;
+        if (totalNumsCampanha > 0) {
+            badgesResumo += `
+                <span class="badge" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.35); color: #93c5fd; font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                    <strong style="color: #60a5fa;">Envio:</strong> ${enviosTotal} <span style="font-size: 10px; color: var(--texto-muted);">(⭐ ${enviosVip} VIP | 📱 ${enviosNormal} Normal)</span>
+                </span>
+                <span class="badge" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #d8b4fe; font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                    <strong style="color: #c084fc;">Criador:</strong> ${criadorTotal} <span style="font-size: 10px; color: var(--texto-muted);">(⭐ ${criadorVip} VIP | 📱 ${criadorNormal} Normal)</span>
+                </span>
+                <span class="badge" style="background: rgba(20, 184, 166, 0.12); border: 1px solid rgba(20, 184, 166, 0.35); color: #5eead4; font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                    <strong style="color: #2dd4bf;">Espião:</strong> ${espiaoTotal} <span style="font-size: 10px; color: var(--texto-muted);">(⭐ ${espiaoVip} VIP | 📱 ${espiaoNormal} Normal)</span>
+                </span>
+            `;
+            if (reservaTotal > 0) {
+                badgesResumo += `
+                    <span class="badge" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #fde68a; font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                        <strong style="color: #fcd34d;">Reserva:</strong> ${reservaTotal} <span style="font-size: 10px; color: var(--texto-muted);">(⭐ ${reservaVip} VIP | 📱 ${reservaNormal} Normal)</span>
+                    </span>
+                `;
+            }
+        }
 
         card.innerHTML = `
             <div class="equipe-titulo-area" style="cursor: default; padding-bottom: 12px;">
                 <div class="equipe-titulo-esq">
                     <h3 style="font-size: 17px;">${camp.nome}</h3>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
                         <span style="font-size: 12px; color: var(--texto-muted);">
                             Volume: <b style="color: var(--laranja-brabo); font-size: 13px;">${totalNumsCampanha} números</b>
                         </span>
