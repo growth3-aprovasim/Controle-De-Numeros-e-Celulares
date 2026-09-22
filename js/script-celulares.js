@@ -29,41 +29,86 @@ function obterCampanhasDoChip(chip) {
     });
 }
 
-// --- POPULA DINAMICAMENTE O DROPDOWN DE CAMPANHAS DO SENDFLOW ---
-function atualizarDropdownsFiltroSendflow() {
-    const selCamp = document.getElementById('filtro-campanha');
-    if (!selCamp) return;
-
-    const valAtual = selCamp.value;
-    selCamp.innerHTML = '<option value="">Todas</option>';
-
-    // Campanhas ordenadas por data de início mais recente
-    const campanhasOrdenadas = [...listaCampanhas].sort((a, b) => {
-        const dataA = a.data ? new Date(a.data + 'T00:00:00').getTime() : 0;
-        const dataB = b.data ? new Date(b.data + 'T00:00:00').getTime() : 0;
-        if (dataB !== dataA) return dataB - dataA;
-        return (a.nome || '').localeCompare(b.nome || '');
-    });
-
-    campanhasOrdenadas.forEach(camp => {
-        const opt = document.createElement('option');
-        opt.value = camp.id;
-        opt.innerText = camp.nome;
-        selCamp.appendChild(opt);
-    });
-
-    const optSemCamp = document.createElement('option');
-    optSemCamp.value = 'SEM_CAMPANHA';
-    optSemCamp.innerText = '⚠️ Sem Campanha';
-    selCamp.appendChild(optSemCamp);
-
-    selCamp.value = valAtual || '';
+// --- OBTÉM O EXPERT EXCLUSIVO / RESPONSÁVEL DO CHIP ---
+function obterExpertDoChip(chip) {
+    if (!chip) return 'Geral';
+    if (Array.isArray(chip.expert)) {
+        return chip.expert.length > 0 && chip.expert[0] ? String(chip.expert[0]).trim() : 'Geral';
+    }
+    if (typeof chip.expert === 'string' && chip.expert.trim()) {
+        let str = chip.expert.trim();
+        if (str.startsWith('[') && str.endsWith(']')) {
+            try {
+                const arr = JSON.parse(str);
+                if (Array.isArray(arr) && arr.length > 0) return String(arr[0]).trim() || 'Geral';
+            } catch (e) {}
+        }
+        if (str.startsWith('{') && str.endsWith('}')) {
+            str = str.replace(/[{}]/g, '').split(',')[0].trim().replace(/^"|"$/g, '');
+            if (str) return str;
+        }
+        return str || 'Geral';
+    }
+    return 'Geral';
 }
 
-// --- POPULA DINAMICAMENTE OS DROPDOWNS DE BM E TARGET COM AS OPÇÕES CADASTRADAS ---
+// --- POPULA DINAMICAMENTE OS DROPDOWNS DE CAMPANHAS E EXPERTS DO SENDFLOW ---
+function atualizarDropdownsFiltroSendflow() {
+    const selCamp = document.getElementById('filtro-campanha');
+    if (selCamp) {
+        const valAtual = selCamp.value;
+        selCamp.innerHTML = '<option value="">Todas</option>';
+
+        // Campanhas ordenadas por data de início mais recente
+        const campanhasOrdenadas = [...listaCampanhas].sort((a, b) => {
+            const dataA = a.data ? new Date(a.data + 'T00:00:00').getTime() : 0;
+            const dataB = b.data ? new Date(b.data + 'T00:00:00').getTime() : 0;
+            if (dataB !== dataA) return dataB - dataA;
+            return (a.nome || '').localeCompare(b.nome || '');
+        });
+
+        campanhasOrdenadas.forEach(camp => {
+            const opt = document.createElement('option');
+            opt.value = camp.id;
+            opt.innerText = camp.nome;
+            selCamp.appendChild(opt);
+        });
+
+        const optSemCamp = document.createElement('option');
+        optSemCamp.value = 'SEM_CAMPANHA';
+        optSemCamp.innerText = '⚠️ Sem Campanha';
+        selCamp.appendChild(optSemCamp);
+
+        selCamp.value = valAtual || '';
+    }
+
+    const selExp = document.getElementById('filtro-expert-sendflow');
+    if (selExp) {
+        const valAtual = selExp.value;
+        selExp.innerHTML = '<option value="">Todos</option>';
+        
+        const expertsSet = new Set(['Geral', 'Mateus', 'Ivan', 'Graton', 'Black']);
+        listaChips.forEach(c => {
+            const e = obterExpertDoChip(c);
+            if (e) expertsSet.add(e);
+        });
+
+        Array.from(expertsSet).sort().forEach(exp => {
+            const opt = document.createElement('option');
+            opt.value = exp;
+            opt.innerText = exp;
+            selExp.appendChild(opt);
+        });
+
+        selExp.value = valAtual || '';
+    }
+}
+
+// --- POPULA DINAMICAMENTE OS DROPDOWNS DE BM, TARGET E EXPERT DO UNNICHAT ---
 function atualizarDropdownsFiltroUnnichat() {
     const selBm = document.getElementById('filtro-bm');
     const selTarget = document.getElementById('filtro-target');
+    const selExp = document.getElementById('filtro-expert-unnichat');
 
     const chipsUnnichat = listaChips.filter(c => c.plataforma === 'Unnichat' || c.equipe === 'UNNICHAT');
 
@@ -92,6 +137,24 @@ function atualizarDropdownsFiltroUnnichat() {
             selTarget.appendChild(opt);
         });
         selTarget.value = targets.includes(valAtual) ? valAtual : '';
+    }
+
+    if (selExp) {
+        const valAtual = selExp.value;
+        selExp.innerHTML = '<option value="">Todos</option>';
+        const expertsSet = new Set(['Geral', 'Mateus', 'Ivan', 'Graton', 'Black']);
+        chipsUnnichat.forEach(c => {
+            const e = obterExpertDoChip(c);
+            if (e) expertsSet.add(e);
+        });
+
+        Array.from(expertsSet).sort().forEach(exp => {
+            const opt = document.createElement('option');
+            opt.value = exp;
+            opt.innerText = exp;
+            selExp.appendChild(opt);
+        });
+        selExp.value = valAtual || '';
     }
 }
 
@@ -123,6 +186,14 @@ function ordenarPor(coluna, manterDirecao = false) {
             if (campsA && !campsB) return ordemCrescente ? -1 : 1;
             if (campsA < campsB) return ordemCrescente ? -1 : 1;
             if (campsA > campsB) return ordemCrescente ? 1 : -1;
+            return 0;
+        }
+
+        if (coluna === 'expert') {
+            const expA = obterExpertDoChip(a).toLowerCase();
+            const expB = obterExpertDoChip(b).toLowerCase();
+            if (expA < expB) return ordemCrescente ? -1 : 1;
+            if (expA > expB) return ordemCrescente ? 1 : -1;
             return 0;
         }
 
@@ -166,6 +237,7 @@ function atualizarIconesOrdenacao() {
     const icones = {
         'nome': 'icone-ordem-nome',
         'numero': 'icone-ordem-numero',
+        'expert': 'icone-ordem-expert',
         'atividade': 'icone-ordem-atividade',
         'funcao': 'icone-ordem-funcao',
         'qualidade': 'icone-ordem-qualidade',
@@ -247,12 +319,18 @@ function filtrarTodosChips() {
     const selCampanha = document.getElementById('filtro-campanha');
     const campanhaVal = selCampanha ? selCampanha.value : '';
 
+    const selExpertSendflow = document.getElementById('filtro-expert-sendflow');
+    const expertSendflowVal = selExpertSendflow ? selExpertSendflow.value : '';
+
     // Filtros Unnichat (Dropdowns com seleção rápida)
     const selBm = document.getElementById('filtro-bm');
     const bmVal = selBm ? selBm.value.toLowerCase().trim() : '';
 
     const selTarget = document.getElementById('filtro-target');
     const targetVal = selTarget ? selTarget.value.toLowerCase().trim() : '';
+
+    const selExpertUnnichat = document.getElementById('filtro-expert-unnichat');
+    const expertUnnichatVal = selExpertUnnichat ? selExpertUnnichat.value : '';
 
     // Separar chips por plataforma
     const chipsSendflow = listaChips.filter(item => {
@@ -264,6 +342,7 @@ function filtrarTodosChips() {
         if (statusVal && item.atividade !== statusVal) return false;
         if (funcaoVal && item.funcao !== funcaoVal) return false;
         if (qualidadeVal && item.qualidade !== qualidadeVal) return false;
+        if (expertSendflowVal && obterExpertDoChip(item) !== expertSendflowVal) return false;
 
         if (campanhaVal === 'SEM_CAMPANHA') {
             const camps = obterCampanhasDoChip(item);
@@ -277,10 +356,11 @@ function filtrarTodosChips() {
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
             const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchExpert = obterExpertDoChip(item).toLowerCase().includes(termo);
             const matchAtividade = item.atividade && item.atividade.toLowerCase().includes(termo);
             const matchFuncao = item.funcao && item.funcao.toLowerCase().includes(termo);
             const matchJuizo = item.juizo && item.juizo.toLowerCase().includes(termo);
-            if (!matchNome && !matchNumero && !matchAtividade && !matchFuncao && !matchJuizo) {
+            if (!matchNome && !matchNumero && !matchExpert && !matchAtividade && !matchFuncao && !matchJuizo) {
                 return false;
             }
         }
@@ -294,13 +374,15 @@ function filtrarTodosChips() {
 
         if (bmVal && (!item.bm || item.bm.toLowerCase().trim() !== bmVal)) return false;
         if (targetVal && (!item.target || item.target.toLowerCase().trim() !== targetVal)) return false;
+        if (expertUnnichatVal && obterExpertDoChip(item) !== expertUnnichatVal) return false;
 
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
             const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchExpert = obterExpertDoChip(item).toLowerCase().includes(termo);
             const matchBm = item.bm && item.bm.toLowerCase().includes(termo);
             const matchTarget = item.target && item.target.toLowerCase().includes(termo);
-            if (!matchNome && !matchNumero && !matchBm && !matchTarget) {
+            if (!matchNome && !matchNumero && !matchExpert && !matchBm && !matchTarget) {
                 return false;
             }
         }
@@ -315,9 +397,10 @@ function filtrarTodosChips() {
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
             const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchExpert = obterExpertDoChip(item).toLowerCase().includes(termo);
             const matchAtividade = item.atividade && item.atividade.toLowerCase().includes(termo);
             const matchJuizo = item.juizo && item.juizo.toLowerCase().includes(termo);
-            if (!matchNome && !matchNumero && !matchAtividade && !matchJuizo) {
+            if (!matchNome && !matchNumero && !matchExpert && !matchAtividade && !matchJuizo) {
                 return false;
             }
         }
@@ -332,10 +415,11 @@ function filtrarTodosChips() {
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
             const matchNumero = item.numero && item.numero.toLowerCase().includes(termo);
+            const matchExpert = obterExpertDoChip(item).toLowerCase().includes(termo);
             const matchAtividade = item.atividade && item.atividade.toLowerCase().includes(termo);
             const matchFuncao = item.funcao && item.funcao.toLowerCase().includes(termo);
             const matchJuizo = item.juizo && item.juizo.toLowerCase().includes(termo);
-            if (!matchNome && !matchNumero && !matchAtividade && !matchFuncao && !matchJuizo) {
+            if (!matchNome && !matchNumero && !matchExpert && !matchAtividade && !matchFuncao && !matchJuizo) {
                 return false;
             }
         }
@@ -354,12 +438,14 @@ function limparFiltrosSendflow() {
     if (document.getElementById('filtro-funcao')) document.getElementById('filtro-funcao').value = '';
     if (document.getElementById('filtro-qualidade')) document.getElementById('filtro-qualidade').value = '';
     if (document.getElementById('filtro-campanha')) document.getElementById('filtro-campanha').value = '';
+    if (document.getElementById('filtro-expert-sendflow')) document.getElementById('filtro-expert-sendflow').value = '';
     filtrarTodosChips();
 }
 
 function limparFiltrosUnnichat() {
     if (document.getElementById('filtro-bm')) document.getElementById('filtro-bm').value = '';
     if (document.getElementById('filtro-target')) document.getElementById('filtro-target').value = '';
+    if (document.getElementById('filtro-expert-unnichat')) document.getElementById('filtro-expert-unnichat').value = '';
     filtrarTodosChips();
 }
 
@@ -373,13 +459,14 @@ function renderizarTabelaSendflow(dados) {
     tbody.innerHTML = '';
 
     if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip Sendflow encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip Sendflow encontrado.</td></tr>`;
         return;
     }
 
     dados.forEach(chip => {
         let classAtiv = obterClasseAtividade(chip.atividade);
         let classFunc = obterClasseFuncao(chip.funcao);
+        const expertChip = obterExpertDoChip(chip);
 
         // Buscar campanhas em que o chip está vinculado
         const campsDoChip = obterCampanhasDoChip(chip);
@@ -399,6 +486,11 @@ function renderizarTabelaSendflow(dados) {
         tr.innerHTML = `
             <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;">
+                <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); font-size: 11px;">
+                    <span class="material-icons-round" style="font-size: 12px; margin-right: 3px; vertical-align: middle;">person</span>${expertChip}
+                </span>
+            </td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classFunc}">${chip.funcao || 'Reserva'}</span></td>
             <td style="padding: 15px 20px; text-align: left;">${campanhasHTML}</td>
@@ -429,18 +521,24 @@ function renderizarTabelaUnnichat(dados) {
     tbody.innerHTML = '';
 
     if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip Unnichat encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum chip Unnichat encontrado.</td></tr>`;
         return;
     }
 
     dados.forEach(chip => {
         const bmTexto = chip.bm ? chip.bm : '-';
         const targetTexto = chip.target ? chip.target : '-';
+        const expertChip = obterExpertDoChip(chip);
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;">
+                <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); font-size: 11px;">
+                    <span class="material-icons-round" style="font-size: 12px; margin-right: 3px; vertical-align: middle;">person</span>${expertChip}
+                </span>
+            </td>
             <td style="padding: 15px 20px; text-align: center;">
                 <span class="badge" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">
                     ${bmTexto}
@@ -474,18 +572,24 @@ function renderizarTabelaVagos(dados) {
     tbody.innerHTML = '';
 
     if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número vago encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número vago encontrado.</td></tr>`;
         return;
     }
 
     dados.forEach(chip => {
         let classAtiv = obterClasseAtividade(chip.atividade);
         const obsTexto = chip.juizo || '-';
+        const expertChip = obterExpertDoChip(chip);
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;">
+                <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); font-size: 11px;">
+                    <span class="material-icons-round" style="font-size: 12px; margin-right: 3px; vertical-align: middle;">person</span>${expertChip}
+                </span>
+            </td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
             <td style="padding: 15px 20px; color: var(--texto-muted); font-size: 12px;">${obsTexto}</td>
             <td style="padding: 15px 20px; text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
@@ -548,7 +652,7 @@ function renderizarTabelaAquecimento(dados) {
     tbody.innerHTML = '';
 
     if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número em aquecimento encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--texto-muted); padding: 25px;">Nenhum número em aquecimento encontrado.</td></tr>`;
         return;
     }
 
@@ -556,6 +660,7 @@ function renderizarTabelaAquecimento(dados) {
         let classAtiv = obterClasseAtividade(chip.atividade);
         let classFunc = obterClasseFuncao(chip.funcao);
         const obsTexto = chip.juizo || '-';
+        const expertChip = obterExpertDoChip(chip);
 
         // Calcular dias aquecendo
         const diasAquecendo = calcularDiasAquecendo(chip.data_inicio_aquecimento);
@@ -584,6 +689,11 @@ function renderizarTabelaAquecimento(dados) {
         tr.innerHTML = `
             <td style="padding: 15px 20px; font-weight: 500;">${chip.nome}</td>
             <td style="padding: 15px 20px; color: var(--texto-claro);">${chip.numero}</td>
+            <td style="padding: 15px 20px; text-align: center;">
+                <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); font-size: 11px;">
+                    <span class="material-icons-round" style="font-size: 12px; margin-right: 3px; vertical-align: middle;">person</span>${expertChip}
+                </span>
+            </td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classAtiv}">${chip.atividade || 'Disponível'}</span></td>
             <td style="padding: 15px 20px; text-align: center;"><span class="badge ${classFunc}">${chip.funcao || 'Envios'}</span></td>
             <td style="padding: 15px 20px; text-align: center;">${diasHTML}</td>
@@ -670,6 +780,7 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = plat;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = chip.nome || '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = chip.numero || '';
+        if (document.getElementById('edit-expert')) document.getElementById('edit-expert').value = obterExpertDoChip(chip);
 
         // Campos Sendflow / Vagos / Aquecimento
         configurarSelectAtividade(chip.atividade || 'Disponível');
@@ -705,6 +816,7 @@ function abrirModalChip(id = null, plataformaPadrao = null) {
         if (document.getElementById('edit-plataforma')) document.getElementById('edit-plataforma').value = platInicial;
         if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = '';
         if (document.getElementById('edit-numero')) document.getElementById('edit-numero').value = '';
+        if (document.getElementById('edit-expert')) document.getElementById('edit-expert').value = 'Geral';
 
         configurarSelectAtividade('Disponível');
         if (document.getElementById('edit-funcao')) document.getElementById('edit-funcao').value = 'Envios';
@@ -742,6 +854,7 @@ if (formChip) {
         const plataformaForm = document.getElementById('edit-plataforma') ? document.getElementById('edit-plataforma').value : 'Sendflow';
         const nomeForm = document.getElementById('edit-nome') ? document.getElementById('edit-nome').value.trim() : '';
         const numeroForm = document.getElementById('edit-numero') ? document.getElementById('edit-numero').value.trim() : '';
+        const expertForm = document.getElementById('edit-expert') ? document.getElementById('edit-expert').value : 'Geral';
 
         const selectAtividade = document.getElementById('edit-num-atividade');
         let atividadeForm = selectAtividade ? selectAtividade.value : 'Disponível';
@@ -825,7 +938,7 @@ if (formChip) {
             target: targetForm,
             data_inicio_aquecimento: plataformaForm === 'Aquecimento' ? (dataInicioAquecimentoForm || null) : null,
             statusEquipe: "Disponível",
-            expert: ["Mateus"]
+            expert: [expertForm]
         });
 
         if (idAtual === null) {
@@ -878,6 +991,7 @@ async function abrirHistoricoChip(id) {
     let classAtiv = obterClasseAtividade(chip.atividade);
     let classFunc = chip.funcao === 'Envios' ? 'bg-func-envios' : (chip.funcao === 'Criador' ? 'bg-func-criador' : 'bg-func-reserva');
     let classQual = obterClasseQualidade(chip.qualidade);
+    const expertChip = obterExpertDoChip(chip);
 
     if (elResumo) {
         elResumo.innerHTML = `
@@ -888,6 +1002,12 @@ async function abrirHistoricoChip(id) {
             <div>
                 <span style="font-size: 11px; color: var(--texto-muted); display: block;">Função:</span>
                 <span class="badge ${classFunc}" style="margin-top: 4px;">${chip.funcao || 'Reserva'}</span>
+            </div>
+            <div>
+                <span style="font-size: 11px; color: var(--texto-muted); display: block;">Expert:</span>
+                <span class="badge" style="margin-top: 4px; background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas);">
+                    <span class="material-icons-round" style="font-size: 12px; margin-right: 3px; vertical-align: middle;">person</span>${expertChip}
+                </span>
             </div>
             <div>
                 <span style="font-size: 11px; color: var(--texto-muted); display: block;">Qualidade:</span>

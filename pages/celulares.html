@@ -13,35 +13,89 @@
         .neon-bar-amarela {
             background: rgba(245, 158, 11, 0.04);
             border: 1px solid rgba(245, 158, 11, 0.35);
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
-            border-radius: 8px;
-            padding: 12px 18px;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.12);
+            border-radius: 10px;
+            padding: 14px 18px;
             display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
         .neon-bar-amarela:focus-within {
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
             border-color: rgba(245, 158, 11, 0.6);
         }
 
         .neon-bar-verde {
             background: rgba(16, 185, 129, 0.04);
             border: 1px solid rgba(16, 185, 129, 0.35);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
-            border-radius: 8px;
-            padding: 12px 18px;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.12);
+            border-radius: 10px;
+            padding: 14px 18px;
             display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
             transition: all 0.3s ease;
+            overflow: hidden;
         }
         .neon-bar-verde:focus-within {
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
             border-color: rgba(16, 185, 129, 0.6);
+        }
+
+        .neon-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .neon-filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .neon-filter-item label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .neon-filter-item select {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            background-color: var(--bg-secundario);
+            color: var(--texto-claro);
+            border: 1px solid var(--bordas);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .neon-filter-item select:focus {
+            border-color: var(--laranja-brabo);
         }
 
         .tabela-colapsavel-header {
@@ -83,93 +137,117 @@
                 <h2>Gerenciamento de Chips & Números</h2>
                 <div class="search-box">
                     <span class="material-icons-round">search</span>
-                    <input type="text" id="input-filtro-chips" placeholder="Buscar em todas as tabelas (nome, número, BM, target, status...)"
+                    <input type="text" id="input-filtro-chips" placeholder="Buscar em todas as tabelas (nome, número, expert, BM, target, status...)"
                         oninput="filtrarTodosChips()">
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="btn-add" onclick="abrirModalChip()">+ ADICIONAR NÚMERO</button>
+                <button class="btn-novo" onclick="abrirModalChip()">
+                    <span class="material-icons-round">add</span> Adicionar Número
+                </button>
             </div>
         </div>
 
         <section class="dashboard-area" style="padding-top: 15px; display: flex; flex-direction: column; gap: 25px;">
             
-            <!-- DUAS BARRAS DE FILTRO COM NEON -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px;">
+            <!-- DUAS BARRAS DE FILTRO COM NEON CORRIGIDAS -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; width: 100%; box-sizing: border-box;">
                 
                 <!-- Barra 1: Sendflow (Neon Amarelo) -->
                 <div class="neon-bar-amarela">
-                    <div style="display: flex; align-items: center; gap: 6px; width: 100%; margin-bottom: 4px;">
-                        <span class="material-icons-round" style="font-size: 18px; color: #f59e0b;">filter_alt</span>
-                        <b style="font-size: 13px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px;">Filtros Sendflow</b>
-                        <button onclick="limparFiltrosSendflow()" style="background: none; border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: auto;">
-                            Limpar
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; border-bottom: 1px solid rgba(245, 158, 11, 0.2); padding-bottom: 6px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span class="material-icons-round" style="font-size: 18px; color: #f59e0b;">filter_alt</span>
+                            <b style="font-size: 13px; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px;">Filtros Sendflow</b>
+                        </div>
+                        <button onclick="limparFiltrosSendflow()" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                            <span class="material-icons-round" style="font-size: 13px;">clear_all</span> Limpar
                         </button>
                     </div>
 
-                    <div class="filter-group" style="flex: 1; min-width: 110px;">
-                        <label style="color: #f59e0b;">Status:</label>
-                        <select id="filtro-status" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
-                            <option value="">Todos</option>
-                            <option value="Disponível">Disponível</option>
-                            <option value="Em Uso">Em Uso</option>
-                            <option value="Em Análise">Em Análise</option>
-                            <option value="Reconectar">Reconectar</option>
-                            <option value="Banido">Banido</option>
-                        </select>
-                    </div>
+                    <div class="neon-filter-grid">
+                        <div class="neon-filter-item">
+                            <label style="color: #f59e0b;">Status:</label>
+                            <select id="filtro-status" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                                <option value="">Todos</option>
+                                <option value="Disponível">Disponível</option>
+                                <option value="Em Uso">Em Uso</option>
+                                <option value="Em Análise">Em Análise</option>
+                                <option value="Reconectar">Reconectar</option>
+                                <option value="Banido">Banido</option>
+                            </select>
+                        </div>
 
-                    <div class="filter-group" style="flex: 1; min-width: 110px;">
-                        <label style="color: #f59e0b;">Função:</label>
-                        <select id="filtro-funcao" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
-                            <option value="">Todas</option>
-                            <option value="Envios">Envios</option>
-                            <option value="Criador">Criador</option>
-                            <option value="Espião">Espião</option>
-                            <option value="Reserva">Reserva</option>
-                        </select>
-                    </div>
+                        <div class="neon-filter-item">
+                            <label style="color: #f59e0b;">Função:</label>
+                            <select id="filtro-funcao" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                                <option value="">Todas</option>
+                                <option value="Envios">Envios</option>
+                                <option value="Criador">Criador</option>
+                                <option value="Espião">Espião</option>
+                                <option value="Reserva">Reserva</option>
+                            </select>
+                        </div>
 
-                    <div class="filter-group" style="flex: 1; min-width: 110px;">
-                        <label style="color: #f59e0b;">Qualidade:</label>
-                        <select id="filtro-qualidade" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
-                            <option value="">Todas</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Média">Média</option>
-                            <option value="Baixa">Baixa</option>
-                        </select>
-                    </div>
+                        <div class="neon-filter-item">
+                            <label style="color: #f59e0b;">Qualidade:</label>
+                            <select id="filtro-qualidade" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                                <option value="">Todas</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Média">Média</option>
+                                <option value="Baixa">Baixa</option>
+                            </select>
+                        </div>
 
-                    <div class="filter-group" style="flex: 1; min-width: 130px;">
-                        <label style="color: #f59e0b;">Campanha:</label>
-                        <select id="filtro-campanha" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
-                            <option value="">Todas</option>
-                        </select>
+                        <div class="neon-filter-item">
+                            <label style="color: #f59e0b;">Campanha:</label>
+                            <select id="filtro-campanha" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+
+                        <div class="neon-filter-item">
+                            <label style="color: #f59e0b;">Expert:</label>
+                            <select id="filtro-expert-sendflow" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Barra 2: Unnichat (Neon Verde) -->
                 <div class="neon-bar-verde">
-                    <div style="display: flex; align-items: center; gap: 6px; width: 100%; margin-bottom: 4px;">
-                        <span class="material-icons-round" style="font-size: 18px; color: #10b981;">filter_list</span>
-                        <b style="font-size: 13px; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">Filtros Unnichat</b>
-                        <button onclick="limparFiltrosUnnichat()" style="background: none; border: 1px solid rgba(16,185,129,0.3); color: #10b981; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; margin-left: auto;">
-                            Limpar
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; border-bottom: 1px solid rgba(16, 185, 129, 0.2); padding-bottom: 6px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span class="material-icons-round" style="font-size: 18px; color: #10b981;">filter_list</span>
+                            <b style="font-size: 13px; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">Filtros Unnichat</b>
+                        </div>
+                        <button onclick="limparFiltrosUnnichat()" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #10b981; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                            <span class="material-icons-round" style="font-size: 13px;">clear_all</span> Limpar
                         </button>
                     </div>
 
-                    <div class="filter-group" style="flex: 1; min-width: 130px;">
-                        <label style="color: #10b981;">BM:</label>
-                        <select id="filtro-bm" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
-                            <option value="">Todas</option>
-                        </select>
-                    </div>
+                    <div class="neon-filter-grid">
+                        <div class="neon-filter-item">
+                            <label style="color: #10b981;">BM:</label>
+                            <select id="filtro-bm" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
 
-                    <div class="filter-group" style="flex: 1; min-width: 130px;">
-                        <label style="color: #10b981;">Target:</label>
-                        <select id="filtro-target" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
-                            <option value="">Todas</option>
-                        </select>
+                        <div class="neon-filter-item">
+                            <label style="color: #10b981;">Target:</label>
+                            <select id="filtro-target" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+
+                        <div class="neon-filter-item">
+                            <label style="color: #10b981;">Expert:</label>
+                            <select id="filtro-expert-unnichat" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(16,185,129,0.3);">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -201,6 +279,11 @@
                                 <th style="padding: 15px 20px; cursor: pointer;" onclick="ordenarPor('numero')">
                                     <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
                                         NÚMERO <span class="material-icons-round" id="icone-ordem-numero" style="font-size: 16px;">sort</span>
+                                    </div>
+                                </th>
+                                <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('expert')">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px; pointer-events: none;">
+                                        EXPERT <span class="material-icons-round" id="icone-ordem-expert" style="font-size: 16px;">sort</span>
                                     </div>
                                 </th>
                                 <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('atividade')">
@@ -253,6 +336,7 @@
                             <tr>
                                 <th style="padding: 15px 20px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
                                 <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: center;">EXPERT</th>
                                 <th style="padding: 15px 20px; text-align: center;">BM</th>
                                 <th style="padding: 15px 20px; text-align: center;">TARGET</th>
                                 <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
@@ -285,6 +369,7 @@
                             <tr>
                                 <th style="padding: 15px 20px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
                                 <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: center;">EXPERT</th>
                                 <th style="padding: 15px 20px; text-align: center;">ATIVIDADE</th>
                                 <th style="padding: 15px 20px; text-align: left;">OBSERVAÇÕES</th>
                                 <th style="padding: 15px 20px; text-align: right;">AÇÕES</th>
@@ -320,6 +405,7 @@
                             <tr>
                                 <th style="padding: 15px 20px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
                                 <th style="padding: 15px 20px; text-align: left;">NÚMERO</th>
+                                <th style="padding: 15px 20px; text-align: center;">EXPERT</th>
                                 <th style="padding: 15px 20px; text-align: center;">ATIVIDADE</th>
                                 <th style="padding: 15px 20px; text-align: center;">FUNÇÃO</th>
                                 <th style="padding: 15px 20px; text-align: center;">DIAS AQUECENDO</th>
@@ -368,6 +454,18 @@
                         <label>Número do Celular</label>
                         <input type="text" id="edit-numero" placeholder="Ex: (16) 99187-6538" maxlength="15"
                             oninput="aplicarMascara(this)" required>
+                    </div>
+
+                    <!-- NOVO: Expert Exclusivo / Responsável -->
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Expert Exclusivo / Responsável</label>
+                        <select id="edit-expert" style="font-weight: 500;">
+                            <option value="Geral">🌐 Geral (Todos os Experts)</option>
+                            <option value="Mateus">Mateus</option>
+                            <option value="Ivan">Ivan</option>
+                            <option value="Graton">Graton</option>
+                            <option value="Black">Black</option>
+                        </select>
                     </div>
 
                     <!-- CAMPOS ESPECÍFICOS DO SENDFLOW -->
