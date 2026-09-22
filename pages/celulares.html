@@ -139,6 +139,13 @@
                             <option value="Baixa">Baixa</option>
                         </select>
                     </div>
+
+                    <div class="filter-group" style="flex: 1; min-width: 130px;">
+                        <label style="color: #f59e0b;">Campanha:</label>
+                        <select id="filtro-campanha" class="filter-select" onchange="filtrarTodosChips()" style="border-color: rgba(245,158,11,0.3);">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Barra 2: Unnichat (Neon Verde) -->
@@ -206,9 +213,9 @@
                                         FUNÇÃO <span class="material-icons-round" id="icone-ordem-funcao" style="font-size: 16px;">sort</span>
                                     </div>
                                 </th>
-                                <th style="padding: 15px 20px; text-align: left;">
+                                <th style="padding: 15px 20px; text-align: left; cursor: pointer;" onclick="ordenarPor('campanhas')">
                                     <div style="display: flex; align-items: center; gap: 5px; pointer-events: none;">
-                                        CAMPANHAS
+                                        CAMPANHAS <span class="material-icons-round" id="icone-ordem-campanhas" style="font-size: 16px;">sort</span>
                                     </div>
                                 </th>
                                 <th style="padding: 15px 20px; text-align: center; cursor: pointer;" onclick="ordenarPor('bans')">

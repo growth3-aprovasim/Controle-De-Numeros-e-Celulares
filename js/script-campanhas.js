@@ -5,10 +5,21 @@ let listaNumerosGeral = [];
 // Mapeamento de ID -> 'VIP' | 'NORMAL' | 'AMBOS'
 let mapNumerosSelecionados = new Map();
 
+function ordenarCampanhasPorDataInicio(lista) {
+    return [...lista].sort((a, b) => {
+        const dataA = a.data ? new Date(a.data + 'T00:00:00').getTime() : 0;
+        const dataB = b.data ? new Date(b.data + 'T00:00:00').getTime() : 0;
+        if (dataB !== dataA) {
+            return dataB - dataA; // Mais recente primeiro, mais antigo por último
+        }
+        return (Number(b.id) || 0) - (Number(a.id) || 0);
+    });
+}
+
 async function carregarDadosCampanhas() {
     try {
-        listaCampanhas = (await DB.campanhas.listar()) || [];
-        listaCampanhas.sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+        const campanhasRaw = (await DB.campanhas.listar()) || [];
+        listaCampanhas = ordenarCampanhasPorDataInicio(campanhasRaw);
         listaNumerosGeral = (await DB.numerosControle.listar()) || [];
         renderizarCampanhas();
     } catch (erro) {

@@ -9,11 +9,55 @@ async function carregarDadosDoBanco() {
     try {
         listaChips = (await DB.numerosControle.listar()) || [];
         listaCampanhas = (await DB.campanhas.listar()) || [];
+        atualizarDropdownsFiltroSendflow();
         atualizarDropdownsFiltroUnnichat();
         ordenarPor(colunaAtual, true);
     } catch (erro) {
         console.error("Erro ao carregar dados dos chips:", erro);
     }
+}
+
+// --- OBTÉM AS CAMPANHAS EM QUE UM CHIP ESPECÍFICO ESTÁ VINCULADO ---
+function obterCampanhasDoChip(chip) {
+    if (!chip || !listaCampanhas || listaCampanhas.length === 0) return [];
+    return listaCampanhas.filter(camp => {
+        return (camp.equipes || []).some(item => {
+            let idStr = item;
+            if (typeof item === 'string' && item.includes(':')) idStr = item.split(':')[0];
+            return String(idStr) === String(chip.id) || idStr === chip.nome;
+        });
+    });
+}
+
+// --- POPULA DINAMICAMENTE O DROPDOWN DE CAMPANHAS DO SENDFLOW ---
+function atualizarDropdownsFiltroSendflow() {
+    const selCamp = document.getElementById('filtro-campanha');
+    if (!selCamp) return;
+
+    const valAtual = selCamp.value;
+    selCamp.innerHTML = '<option value="">Todas</option>';
+
+    // Campanhas ordenadas por data de início mais recente
+    const campanhasOrdenadas = [...listaCampanhas].sort((a, b) => {
+        const dataA = a.data ? new Date(a.data + 'T00:00:00').getTime() : 0;
+        const dataB = b.data ? new Date(b.data + 'T00:00:00').getTime() : 0;
+        if (dataB !== dataA) return dataB - dataA;
+        return (a.nome || '').localeCompare(b.nome || '');
+    });
+
+    campanhasOrdenadas.forEach(camp => {
+        const opt = document.createElement('option');
+        opt.value = camp.id;
+        opt.innerText = camp.nome;
+        selCamp.appendChild(opt);
+    });
+
+    const optSemCamp = document.createElement('option');
+    optSemCamp.value = 'SEM_CAMPANHA';
+    optSemCamp.innerText = '⚠️ Sem Campanha';
+    selCamp.appendChild(optSemCamp);
+
+    selCamp.value = valAtual || '';
 }
 
 // --- POPULA DINAMICAMENTE OS DROPDOWNS DE BM E TARGET COM AS OPÇÕES CADASTRADAS ---
@@ -71,6 +115,17 @@ function ordenarPor(coluna, manterDirecao = false) {
     }
 
     listaChips.sort((a, b) => {
+        if (coluna === 'campanhas') {
+            const campsA = obterCampanhasDoChip(a).map(c => c.nome).sort().join(', ').toLowerCase();
+            const campsB = obterCampanhasDoChip(b).map(c => c.nome).sort().join(', ').toLowerCase();
+
+            if (!campsA && campsB) return ordemCrescente ? 1 : -1;
+            if (campsA && !campsB) return ordemCrescente ? -1 : 1;
+            if (campsA < campsB) return ordemCrescente ? -1 : 1;
+            if (campsA > campsB) return ordemCrescente ? 1 : -1;
+            return 0;
+        }
+
         let valorA = (a && a[coluna] !== undefined && a[coluna] !== null) ? a[coluna] : '';
         let valorB = (b && b[coluna] !== undefined && b[coluna] !== null) ? b[coluna] : '';
 
@@ -114,6 +169,7 @@ function atualizarIconesOrdenacao() {
         'atividade': 'icone-ordem-atividade',
         'funcao': 'icone-ordem-funcao',
         'qualidade': 'icone-ordem-qualidade',
+        'campanhas': 'icone-ordem-campanhas',
         'bans': 'icone-ordem-bans'
     };
 
@@ -188,6 +244,9 @@ function filtrarTodosChips() {
     const selQualidade = document.getElementById('filtro-qualidade');
     const qualidadeVal = selQualidade ? selQualidade.value : '';
 
+    const selCampanha = document.getElementById('filtro-campanha');
+    const campanhaVal = selCampanha ? selCampanha.value : '';
+
     // Filtros Unnichat (Dropdowns com seleção rápida)
     const selBm = document.getElementById('filtro-bm');
     const bmVal = selBm ? selBm.value.toLowerCase().trim() : '';
@@ -205,6 +264,15 @@ function filtrarTodosChips() {
         if (statusVal && item.atividade !== statusVal) return false;
         if (funcaoVal && item.funcao !== funcaoVal) return false;
         if (qualidadeVal && item.qualidade !== qualidadeVal) return false;
+
+        if (campanhaVal === 'SEM_CAMPANHA') {
+            const camps = obterCampanhasDoChip(item);
+            if (camps.length > 0) return false;
+        } else if (campanhaVal) {
+            const camps = obterCampanhasDoChip(item);
+            const estaNaCampanha = camps.some(c => String(c.id) === String(campanhaVal) || c.nome === campanhaVal);
+            if (!estaNaCampanha) return false;
+        }
 
         if (termo) {
             const matchNome = item.nome && item.nome.toLowerCase().includes(termo);
@@ -285,6 +353,7 @@ function limparFiltrosSendflow() {
     if (document.getElementById('filtro-status')) document.getElementById('filtro-status').value = '';
     if (document.getElementById('filtro-funcao')) document.getElementById('filtro-funcao').value = '';
     if (document.getElementById('filtro-qualidade')) document.getElementById('filtro-qualidade').value = '';
+    if (document.getElementById('filtro-campanha')) document.getElementById('filtro-campanha').value = '';
     filtrarTodosChips();
 }
 
@@ -313,13 +382,7 @@ function renderizarTabelaSendflow(dados) {
         let classFunc = obterClasseFuncao(chip.funcao);
 
         // Buscar campanhas em que o chip está vinculado
-        const campsDoChip = listaCampanhas.filter(camp => {
-            return (camp.equipes || []).some(item => {
-                let idStr = item;
-                if (typeof item === 'string' && item.includes(':')) idStr = item.split(':')[0];
-                return String(idStr) === String(chip.id) || idStr === chip.nome;
-            });
-        });
+        const campsDoChip = obterCampanhasDoChip(chip);
 
         let campanhasHTML = '';
         if (campsDoChip.length > 0) {
@@ -930,8 +993,10 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         carregarDadosDoBanco();
         DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosDoBanco());
+        DB.assinarMudancas('cnc_campanhas', () => carregarDadosDoBanco());
     });
 } else {
     carregarDadosDoBanco();
     DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosDoBanco());
+    DB.assinarMudancas('cnc_campanhas', () => carregarDadosDoBanco());
 }
