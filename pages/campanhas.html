@@ -85,7 +85,7 @@
 
     <!-- Modal de Criação / Edição de Campanha -->
     <div id="modal-campanha" class="modal">
-        <div class="modal-content" style="width: 650px;">
+        <div class="modal-content" style="width: 740px; max-width: 95vw;">
             <div class="modal-header">
                 <h3 id="modal-titulo-camp">Nova Campanha</h3>
                 <span class="close-btn" onclick="fecharModalCampanha()">&times;</span>
@@ -101,7 +101,7 @@
                     
                     <div class="form-group">
                         <label>Expert da Campanha</label>
-                        <select id="edit-camp-expert">
+                        <select id="edit-camp-expert" onchange="atualizarBotaoFiltroExpertCampanha()">
                             <option value="Mateus">Mateus</option>
                             <option value="Ivan">Ivan</option>
                             <option value="Graton">Graton</option>
@@ -136,19 +136,27 @@
                     </div>
 
                     <!-- Barra de busca e filtros rápidos no modal -->
-                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                        <div class="search-box" style="flex: 1; background-color: var(--bg-card);">
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <div class="search-box" style="flex: 1; min-width: 180px; background-color: var(--bg-card);">
                             <span class="material-icons-round" style="font-size: 18px;">search</span>
-                            <input type="text" id="busca-numeros-modal" placeholder="Filtrar por nome ou telefone..." oninput="filtrarNumerosModal()" style="font-size: 13px; width: 100%;">
+                            <input type="text" id="busca-numeros-modal" placeholder="Filtrar por nome, número ou expert..." oninput="filtrarNumerosModal()" style="font-size: 13px; width: 100%;">
                         </div>
-                        <select id="filtro-funcao-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px;">
+                        <select id="filtro-expert-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px; border-color: rgba(245, 158, 11, 0.4); min-width: 125px;">
+                            <option value="">Todos Experts</option>
+                            <option value="Mateus">Mateus</option>
+                            <option value="Ivan">Ivan</option>
+                            <option value="Graton">Graton</option>
+                            <option value="Black">Black</option>
+                            <option value="Geral">Geral</option>
+                        </select>
+                        <select id="filtro-funcao-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px; min-width: 110px;">
                             <option value="">Todas Funções</option>
                             <option value="Envios">Envios</option>
                             <option value="Criador">Criador</option>
                             <option value="Espião">Espião</option>
                             <option value="Reserva">Reserva</option>
                         </select>
-                        <select id="filtro-status-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px;">
+                        <select id="filtro-status-modal" onchange="filtrarNumerosModal()" class="filter-select" style="font-size: 12px; min-width: 105px;">
                             <option value="">Todos Status</option>
                             <option value="Disponível">Disponível</option>
                             <option value="Em Uso">Em Uso</option>
@@ -158,13 +166,17 @@
                         </select>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <button type="button" onclick="marcarTodosNumerosModal(true)" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
                                 Marcar visíveis
                             </button>
                             <button type="button" onclick="marcarTodosNumerosModal(false)" style="background: none; border: 1px solid var(--bordas); color: var(--texto-muted); font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
                                 Desmarcar todos
+                            </button>
+                            <button type="button" id="btn-filtro-expert-camp-alvo" onclick="alternarFiltroExpertCampanha()" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.35); color: var(--laranja-brabo); font-size: 11px; padding: 4px 9px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-weight: 500;" title="Filtrar apenas números do expert selecionado para esta campanha">
+                                <span class="material-icons-round" style="font-size: 14px;">filter_alt</span>
+                                Filtrar pelo expert: <b id="txt-expert-camp-alvo" style="margin-left: 2px;">Mateus</b>
                             </button>
                         </div>
                         <span style="font-size: 11px; color: var(--texto-muted);">
@@ -172,7 +184,7 @@
                         </span>
                     </div>
 
-                    <div id="lista-checkbox-numeros-camp" style="background-color: var(--bg-card); border: 1px solid var(--bordas); border-radius: 6px; padding: 10px; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+                    <div id="lista-checkbox-numeros-camp" style="background-color: var(--bg-card); border: 1px solid var(--bordas); border-radius: 6px; padding: 10px; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
                         <!-- Checkboxes dos Números carregados via JS -->
                     </div>
                 </div>
@@ -198,8 +210,13 @@
 
                 <div style="margin-bottom: 15px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--bordas);">
                     <div style="font-size: 11px; color: var(--texto-muted); text-transform: uppercase; font-weight: 600;">Número Selecionado</div>
-                    <div id="edit-numcamp-nome-preview" style="font-size: 14px; font-weight: bold; color: var(--texto-claro); margin-top: 2px;"></div>
-                    <div id="edit-numcamp-numero-preview" style="font-size: 12px; color: var(--texto-muted);"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                        <div>
+                            <div id="edit-numcamp-nome-preview" style="font-size: 14px; font-weight: bold; color: var(--texto-claro);"></div>
+                            <div id="edit-numcamp-numero-preview" style="font-size: 12px; color: var(--texto-muted);"></div>
+                        </div>
+                        <div id="edit-numcamp-expert-preview"></div>
+                    </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 15px;">

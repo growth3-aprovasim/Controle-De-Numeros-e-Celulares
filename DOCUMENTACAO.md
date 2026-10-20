@@ -650,13 +650,15 @@ O projeto já vem configurado com Dockerfile para deploy em plataformas como **E
 [TIRAR PRINT DOS CAMPOS DO MODAL DE NOVA CAMPANHA]
 
 4. **Selecionar Números para a Campanha:**
-   - Use o campo de busca dentro do modal para encontrar números
-   - Filtre por função ou status usando os dropdowns
+   - Use o campo de busca dentro do modal para encontrar números (busca por nome, telefone ou expert)
+   - Filtre por **Expert** usando o dropdown exclusivo de experts ou o botão rápido **"Filtrar pelo expert desta campanha"**
+   - Filtre por função ou status usando os dropdowns correspondentes
+   - Cada número da lista exibe a tag visual com o **Expert** ao qual pertence
    - Marque os checkboxes dos números desejados
    - Para cada número marcado, selecione o **grupo**: ⭐ VIP, 📱 Normal ou 👑 Ambos
    - Use "Marcar visíveis" para selecionar todos os números filtrados de uma vez
 
-[TIRAR PRINT DA LISTA DE CHECKBOXES DE NÚMEROS NO MODAL DE CAMPANHA]
+[TIRAR PRINT DA LISTA DE CHECKBOXES DE NÚMEROS NO MODAL DE CAMPANHA COM FILTRO DE EXPERT]
 
 5. Clique em **"Salvar Campanha"**
 

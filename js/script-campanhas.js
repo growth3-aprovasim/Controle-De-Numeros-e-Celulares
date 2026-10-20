@@ -5,6 +5,39 @@ let listaNumerosGeral = [];
 // Mapeamento de ID -> 'VIP' | 'NORMAL' | 'AMBOS'
 let mapNumerosSelecionados = new Map();
 
+// --- OBTÉM O EXPERT EXCLUSIVO / RESPONSÁVEL DO CHIP ---
+function obterExpertDoChip(chip) {
+    if (!chip) return 'Geral';
+    if (Array.isArray(chip.expert)) {
+        return chip.expert.length > 0 && chip.expert[0] ? String(chip.expert[0]).trim() : 'Geral';
+    }
+    if (typeof chip.expert === 'string' && chip.expert.trim()) {
+        let str = chip.expert.trim();
+        if (str.startsWith('[') && str.endsWith(']')) {
+            try {
+                const arr = JSON.parse(str);
+                if (Array.isArray(arr) && arr.length > 0) return String(arr[0]).trim() || 'Geral';
+            } catch (e) {}
+        }
+        if (str.startsWith('{') && str.endsWith('}')) {
+            str = str.replace(/[{}]/g, '').split(',')[0].trim().replace(/^"|"$/g, '');
+            if (str) return str;
+        }
+        return str || 'Geral';
+    }
+    return 'Geral';
+}
+
+function obterCorExpert(exp) {
+    switch ((exp || '').toLowerCase()) {
+        case 'mateus': return '#3b82f6';
+        case 'ivan': return '#10b981';
+        case 'graton': return '#f59e0b';
+        case 'black': return '#a855f7';
+        default: return '#94a3b8';
+    }
+}
+
 function ordenarCampanhasPorDataInicio(lista) {
     return [...lista].sort((a, b) => {
         const dataA = a.data ? new Date(a.data + 'T00:00:00').getTime() : 0;
@@ -108,11 +141,13 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
         let linhasTabelaHTML = '';
 
         if (totalNumerosCampanha === 0) {
-            linhasTabelaHTML = `<tr><td colspan="7" style="text-align: center; color: var(--texto-muted); padding: 20px;">Nenhum número vinculado a esta campanha. Clique em Editar para adicionar números.</td></tr>`;
+            linhasTabelaHTML = `<tr><td colspan="8" style="text-align: center; color: var(--texto-muted); padding: 20px;">Nenhum número vinculado a esta campanha. Clique em Editar para adicionar números.</td></tr>`;
         } else {
             detalhesNumeros.forEach(item => {
                 const num = item.num;
                 const grp = item.grupo;
+                const expertNum = obterExpertDoChip(num);
+                const corExp = obterCorExpert(expertNum);
 
                 let classAtiv = obterClasseAtividadeCampanha(num.atividade);
                 let classFunc = num.funcao === 'Envios' ? 'bg-func-envios' : (num.funcao === 'Criador' ? 'bg-func-criador' : (num.funcao === 'Espião' ? 'bg-func-espiao' : 'bg-func-reserva'));
@@ -136,6 +171,11 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
                         <td style="padding: 12px 15px; text-align: center;">${badgeGrupo}</td>
                         <td style="padding: 12px 15px; font-weight: 600; color: var(--texto-claro);">${iconeCapitao}${num.nome}</td>
                         <td style="padding: 12px 15px; color: var(--texto-claro);">${num.numero}</td>
+                        <td style="padding: 12px 15px; text-align: center;">
+                            <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); font-size: 11px;">
+                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${corExp}; margin-right: 4px;"></span>${expertNum}
+                            </span>
+                        </td>
                         <td style="padding: 12px 15px; text-align: center;"><span class="badge ${classAtiv}">${num.atividade}</span></td>
                         <td style="padding: 12px 15px; text-align: center;"><span class="badge ${classFunc}">${num.funcao}</span></td>
                         <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: ${num.bans > 0 ? '#ef4444' : 'var(--texto-muted)'};">${num.bans !== undefined ? num.bans : 0}</td>
@@ -190,6 +230,7 @@ function renderizarCampanhas(dadosParaRenderizar = listaCampanhas) {
                             <th style="padding: 10px 15px; text-align: center; width: 140px;">GRUPO</th>
                             <th style="padding: 10px 15px; text-align: left;">NOME (IDENTIFICAÇÃO)</th>
                             <th style="padding: 10px 15px; text-align: left;">NÚMERO</th>
+                            <th style="padding: 10px 15px; text-align: center;">EXPERT</th>
                             <th style="padding: 10px 15px; text-align: center;">ATIVIDADE</th>
                             <th style="padding: 10px 15px; text-align: center;">FUNÇÃO</th>
                             <th style="padding: 10px 15px; text-align: center;">BANS</th>
@@ -238,15 +279,75 @@ function limparFiltrosCampanhas() {
     renderizarCampanhas(listaCampanhas);
 }
 
+function popularFiltroExpertModal() {
+    const sel = document.getElementById('filtro-expert-modal');
+    if (!sel) return;
+    const valorAtual = sel.value;
+    const expertsSet = new Set(['Mateus', 'Ivan', 'Graton', 'Black', 'Geral']);
+    listaNumerosGeral.forEach(n => {
+        const e = obterExpertDoChip(n);
+        if (e) expertsSet.add(e);
+    });
+    const lista = Array.from(expertsSet).sort();
+    let options = `<option value="">Todos Experts</option>`;
+    lista.forEach(exp => {
+        options += `<option value="${exp}">${exp}</option>`;
+    });
+    sel.innerHTML = options;
+    if (valorAtual) sel.value = valorAtual;
+}
+
+function atualizarBotaoFiltroExpertCampanha() {
+    const selCampExp = document.getElementById('edit-camp-expert');
+    const campExpert = selCampExp ? selCampExp.value : 'Mateus';
+    const txtLabel = document.getElementById('txt-expert-camp-alvo');
+    if (txtLabel) txtLabel.innerText = campExpert;
+
+    const btn = document.getElementById('btn-filtro-expert-camp-alvo');
+    const selExpModal = document.getElementById('filtro-expert-modal');
+    if (btn && selExpModal) {
+        if (selExpModal.value === campExpert) {
+            btn.style.backgroundColor = 'var(--laranja-brabo)';
+            btn.style.color = '#000';
+            btn.style.borderColor = 'var(--laranja-brabo)';
+            btn.style.fontWeight = 'bold';
+        } else {
+            btn.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+            btn.style.color = 'var(--laranja-brabo)';
+            btn.style.borderColor = 'rgba(245, 158, 11, 0.35)';
+            btn.style.fontWeight = '500';
+        }
+    }
+}
+
+function alternarFiltroExpertCampanha() {
+    const selCampExp = document.getElementById('edit-camp-expert');
+    const campExpert = selCampExp ? selCampExp.value : 'Mateus';
+    const selExpModal = document.getElementById('filtro-expert-modal');
+    if (!selExpModal) return;
+
+    if (selExpModal.value === campExpert) {
+        selExpModal.value = '';
+    } else {
+        selExpModal.value = campExpert;
+    }
+    atualizarBotaoFiltroExpertCampanha();
+    filtrarNumerosModal();
+}
+
 function abrirModalCampanha(id = null) {
     mapNumerosSelecionados.clear();
 
     const inputBusca = document.getElementById('busca-numeros-modal');
     if (inputBusca) inputBusca.value = '';
+    const filtroExpert = document.getElementById('filtro-expert-modal');
+    if (filtroExpert) filtroExpert.value = '';
     const filtroFunc = document.getElementById('filtro-funcao-modal');
     if (filtroFunc) filtroFunc.value = '';
     const filtroStatus = document.getElementById('filtro-status-modal');
     if (filtroStatus) filtroStatus.value = '';
+
+    popularFiltroExpertModal();
 
     if (id) {
         const camp = listaCampanhas.find(c => c.id === id);
@@ -286,6 +387,7 @@ function abrirModalCampanha(id = null) {
         document.getElementById('edit-camp-data').value = '';
     }
 
+    atualizarBotaoFiltroExpertCampanha();
     renderizarCheckboxesNumeros();
     document.getElementById('modal-campanha').style.display = 'flex';
 }
@@ -303,26 +405,36 @@ function renderizarCheckboxesNumeros() {
     const inputBusca = document.getElementById('busca-numeros-modal');
     const termo = inputBusca ? inputBusca.value.toLowerCase().trim() : '';
 
+    const selectExpert = document.getElementById('filtro-expert-modal');
+    const expertFiltro = selectExpert ? selectExpert.value : '';
+
     const selectFuncao = document.getElementById('filtro-funcao-modal');
     const funcaoFiltro = selectFuncao ? selectFuncao.value : '';
 
     const selectStatus = document.getElementById('filtro-status-modal');
     const statusFiltro = selectStatus ? selectStatus.value : '';
 
+    atualizarBotaoFiltroExpertCampanha();
+
     const numerosExibicao = listaNumerosGeral.filter(n => {
         // Apenas números do Sendflow podem ser atribuídos em campanhas (excluir Unnichat)
         const isUnnichat = n.plataforma === 'Unnichat' || n.equipe === 'UNNICHAT' || n.equipe === 'Unnichat';
         if (isUnnichat) return false;
 
+        const expertChip = obterExpertDoChip(n);
+        if (expertFiltro && expertChip !== expertFiltro) return false;
         if (funcaoFiltro && n.funcao !== funcaoFiltro) return false;
         if (statusFiltro && n.atividade !== statusFiltro) return false;
+
         if (!termo) return true;
-        return (n.nome && n.nome.toLowerCase().includes(termo)) ||
-            (n.numero && n.numero.toLowerCase().includes(termo));
+        const matchNome = n.nome && n.nome.toLowerCase().includes(termo);
+        const matchNumero = n.numero && n.numero.toLowerCase().includes(termo);
+        const matchExpert = expertChip.toLowerCase().includes(termo);
+        return matchNome || matchNumero || matchExpert;
     });
 
     if (numerosExibicao.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: var(--texto-muted); font-size: 12px; padding: 15px;">Nenhum número encontrado.</div>`;
+        container.innerHTML = `<div style="text-align: center; color: var(--texto-muted); font-size: 12px; padding: 15px;">Nenhum número encontrado com os filtros selecionados.</div>`;
         return;
     }
 
@@ -330,6 +442,8 @@ function renderizarCheckboxesNumeros() {
         const idStr = String(num.id);
         const estaMarcado = mapNumerosSelecionados.has(idStr);
         const grupoAtual = mapNumerosSelecionados.get(idStr) || 'NORMAL';
+        const expertChip = obterExpertDoChip(num);
+        const corExpert = obterCorExpert(expertChip);
         let classAtiv = obterClasseAtividadeCampanha(num.atividade);
 
         const itemRow = document.createElement('div');
@@ -340,21 +454,28 @@ function renderizarCheckboxesNumeros() {
             gap: 10px;
             padding: 8px 10px;
             border-radius: 6px;
-            background-color: ${estaMarcado ? (grupoAtual === 'VIP' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(234, 88, 12, 0.12)') : 'rgba(255, 255, 255, 0.02)'};
-            border: 1px solid ${estaMarcado ? (grupoAtual === 'VIP' ? '#f59e0b' : 'var(--laranja-brabo)') : 'transparent'};
+            background-color: ${estaMarcado ? (grupoAtual === 'VIP' ? 'rgba(245, 158, 11, 0.12)' : (grupoAtual === 'AMBOS' ? 'rgba(168, 85, 247, 0.12)' : 'rgba(234, 88, 12, 0.12)')) : 'rgba(255, 255, 255, 0.02)'};
+            border: 1px solid ${estaMarcado ? (grupoAtual === 'VIP' ? '#f59e0b' : (grupoAtual === 'AMBOS' ? '#a855f7' : 'var(--laranja-brabo)')) : 'transparent'};
             transition: all 0.2s;
         `;
 
         itemRow.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                <input type="checkbox" class="cb-numero-item" value="${idStr}" ${estaMarcado ? 'checked' : ''} style="cursor: pointer; accent-color: var(--laranja-brabo);">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-size: 13px; font-weight: 600; color: var(--texto-claro);">${num.nome}</span>
-                    <span style="font-size: 11px; color: var(--texto-muted);">${num.numero}</span>
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+                <input type="checkbox" class="cb-numero-item" value="${idStr}" ${estaMarcado ? 'checked' : ''} style="cursor: pointer; accent-color: var(--laranja-brabo); flex-shrink: 0;">
+                <div style="display: flex; flex-direction: column; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="font-size: 13px; font-weight: 600; color: var(--texto-claro);">${num.isCapitao ? '<span title="Capitão">👑 </span>' : ''}${num.nome}</span>
+                        <span class="badge" style="font-size: 10px; padding: 2px 6px; background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="Expert: ${expertChip}">
+                            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${corExpert};"></span>
+                            <span style="font-size: 9px; color: var(--texto-muted); font-weight: 500;">EXPERT:</span>
+                            <b style="color: var(--texto-claro);">${expertChip}</b>
+                        </span>
+                    </div>
+                    <span style="font-size: 11px; color: var(--texto-muted); font-family: monospace;">${num.numero}</span>
                 </div>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                 <span class="badge ${classAtiv}" style="font-size: 10px; padding: 2px 6px;">${num.atividade}</span>
                 <span style="font-size: 11px; color: var(--texto-muted);">${num.funcao || 'Reserva'}</span>
                 
@@ -389,6 +510,7 @@ function renderizarCheckboxesNumeros() {
         container.appendChild(itemRow);
     });
 }
+
 
 function filtrarNumerosModal() {
     renderizarCheckboxesNumeros();
@@ -490,6 +612,17 @@ function abrirModalEditarNumeroCampanha(campId, numId, grupoAtual = 'NORMAL') {
 
     document.getElementById('edit-numcamp-nome-preview').innerText = num.nome || 'Sem Nome';
     document.getElementById('edit-numcamp-numero-preview').innerText = num.numero || '';
+
+    const exp = obterExpertDoChip(num);
+    const corExp = obterCorExpert(exp);
+    const previewExp = document.getElementById('edit-numcamp-expert-preview');
+    if (previewExp) {
+        previewExp.innerHTML = `
+            <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--texto-claro); border: 1px solid var(--bordas); font-size: 11px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px;">
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${corExp};"></span>Expert: <b>${exp}</b>
+            </span>
+        `;
+    }
 
     document.getElementById('edit-numcamp-grupo').value = grupoAtual || 'NORMAL';
     document.getElementById('edit-numcamp-funcao').value = num.funcao || 'Envios';
