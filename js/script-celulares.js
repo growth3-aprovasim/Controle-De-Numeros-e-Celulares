@@ -885,7 +885,7 @@ if (formChip) {
         let chipExistente = idAtual !== null ? listaChips.find(c => c.id === idAtual) : null;
         let bansCalculados = chipExistente ? (chipExistente.bans || 0) : 0;
 
-        if (plataformaForm === 'Sendflow' && atividadeForm === 'Banido') {
+        if (atividadeForm === 'Banido') {
             if (!chipExistente || chipExistente.atividade !== 'Banido') {
                 bansCalculados += 1;
             }

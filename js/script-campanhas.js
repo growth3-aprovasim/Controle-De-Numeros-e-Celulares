@@ -538,6 +538,10 @@ function fecharModalCampanha() {
 // Sincroniza a atividade dos números baseado no status de todas as campanhas
 async function sincronizarStatusNumeros(campanhasAtualizadas) {
     try {
+        // 1. Busca sempre os dados mais recentes do banco para não usar dados defasados da memória
+        const listaAtualizada = (await DB.numerosControle.listar()) || [];
+        listaNumerosGeral = listaAtualizada;
+
         const idsEmUso = new Set();
         campanhasAtualizadas.forEach(c => {
             if (c.status === 'Em Andamento') {
@@ -555,14 +559,28 @@ async function sincronizarStatusNumeros(campanhasAtualizadas) {
         const paraEmUso = [];
         const paraDisponivel = [];
 
+        // Status que NUNCA podem ser alterados automaticamente por sincronização de campanha
+        const statusProtegidos = ['Banido', 'Reconectar', 'Em Análise', 'Indisponível'];
+
         listaNumerosGeral.forEach(n => {
+            // NUNCA alterar status protegidos (Banido, Reconectar, Em Análise, Indisponível) automaticamente!
+            if (statusProtegidos.includes(n.atividade)) {
+                return;
+            }
+
             const deveriaEstarEmUso = idsEmUso.has(n.id);
-            if (deveriaEstarEmUso && n.atividade !== 'Em Uso') {
-                paraEmUso.push(n.id);
-                n.atividade = 'Em Uso';
-            } else if (!deveriaEstarEmUso && n.atividade === 'Em Uso') {
-                paraDisponivel.push(n.id);
-                n.atividade = 'Disponível';
+            if (deveriaEstarEmUso) {
+                // Apenas promove para 'Em Uso' se o chip estiver com atividade 'Disponível'
+                if (n.atividade === 'Disponível') {
+                    paraEmUso.push(n.id);
+                    n.atividade = 'Em Uso';
+                }
+            } else {
+                // Apenas volta para 'Disponível' se o chip estiver com atividade 'Em Uso'
+                if (n.atividade === 'Em Uso') {
+                    paraDisponivel.push(n.id);
+                    n.atividade = 'Disponível';
+                }
             }
         });
 
@@ -650,8 +668,10 @@ async function salvarEdicaoNumeroCampanha(e) {
 
     // 1. Atualiza a função no chip (cnc_numeros_controle) se tiver mudado
     if (num.funcao !== novaFuncao) {
-        num.funcao = novaFuncao;
-        await DB.numerosControle.salvar(num);
+        const chipsAtualizados = (await DB.numerosControle.listar()) || [];
+        const chipDb = chipsAtualizados.find(n => n.id === numId) || num;
+        chipDb.funcao = novaFuncao;
+        await DB.numerosControle.salvar(chipDb);
     }
 
     // 2. Atualiza o grupo (VIP, NORMAL, AMBOS) na lista de equipes da campanha
@@ -728,4 +748,17 @@ if (formCampanha) {
 
 document.addEventListener('DOMContentLoaded', () => {
     carregarDadosCampanhas();
+    if (typeof DB !== 'undefined' && DB.assinarMudancas) {
+        DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosCampanhas());
+        DB.assinarMudancas('cnc_campanhas', () => carregarDadosCampanhas());
+    }
 });
+
+// Fallback caso DOM já tenha carregado
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    carregarDadosCampanhas();
+    if (typeof DB !== 'undefined' && DB.assinarMudancas) {
+        DB.assinarMudancas('cnc_numeros_controle', () => carregarDadosCampanhas());
+        DB.assinarMudancas('cnc_campanhas', () => carregarDadosCampanhas());
+    }
+}

@@ -36,9 +36,11 @@ async function carregarDashboard() {
 
         // Sincronização automática de status:
         // Se um número está em campanha ativa e com atividade 'Disponível', sincronizar para 'Em Uso'
+        // Status protegidos (Banido, Reconectar, Em Análise, Indisponível) NUNCA são alterados!
         const paraPromoverUso = [];
+        const statusProtegidos = ['Banido', 'Reconectar', 'Em Análise', 'Indisponível'];
         chipsEmCampanhasAtivas.forEach(n => {
-            if (n.atividade === 'Disponível') {
+            if (!statusProtegidos.includes(n.atividade) && n.atividade === 'Disponível') {
                 n.atividade = 'Em Uso';
                 paraPromoverUso.push(n.id);
             }

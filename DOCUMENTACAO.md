@@ -286,7 +286,7 @@ A página principal exibe:
   - Distribuição por função (Envios, Criador, Espião, Reserva)
   - Números por expert
 
-**Comportamento automático:** Se um número está alocado em uma campanha ativa e com status "Disponível", o sistema automaticamente altera para "Em Uso".
+**Comportamento automático:** Se um número está alocado em uma campanha ativa e com status "Disponível", o sistema altera para "Em Uso". Números com status protegidos (**"Banido"**, **"Reconectar"**, **"Em Análise"**, **"Indisponível"**) nunca são alterados automaticamente pelas sincronizações de campanhas.
 
 **Realtime:** A página assina as tabelas `cnc_numeros_controle` e `cnc_campanhas` via Supabase Realtime, recarregando automaticamente quando qualquer dado muda.
 
