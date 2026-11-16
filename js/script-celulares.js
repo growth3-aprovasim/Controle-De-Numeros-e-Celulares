@@ -276,6 +276,8 @@ function obterClasseAtividade(atividade) {
         case 'Disponível': return 'bg-ativ-disponivel';
         case 'Em Análise': return 'bg-ativ-analise';
         case 'Banido': return 'bg-ativ-banido';
+        case 'Banido Permanente':
+        case 'Banido Permanentemente': return 'bg-ativ-banido-permanente';
         case 'Reconectar': return 'bg-ativ-reconectar';
         case 'Indisponível': return 'bg-ativ-banido';
         default: return 'bg-ativ-disponivel';
@@ -745,7 +747,7 @@ function configurarSelectAtividade(valorAtual = 'Disponível') {
         elAtividade.appendChild(optUso);
     }
 
-    const opcoes = ['Disponível', 'Em Análise', 'Reconectar', 'Banido'];
+    const opcoes = ['Disponível', 'Em Análise', 'Reconectar', 'Banido', 'Banido Permanente'];
     opcoes.forEach(opt => {
         const elOpt = document.createElement('option');
         elOpt.value = opt;
@@ -885,8 +887,9 @@ if (formChip) {
         let chipExistente = idAtual !== null ? listaChips.find(c => c.id === idAtual) : null;
         let bansCalculados = chipExistente ? (chipExistente.bans || 0) : 0;
 
-        if (atividadeForm === 'Banido') {
-            if (!chipExistente || chipExistente.atividade !== 'Banido') {
+        if (atividadeForm === 'Banido' || atividadeForm === 'Banido Permanente') {
+            const eraBanido = chipExistente && (chipExistente.atividade === 'Banido' || chipExistente.atividade === 'Banido Permanente' || chipExistente.atividade === 'Banido Permanentemente');
+            if (!eraBanido) {
                 bansCalculados += 1;
             }
         }

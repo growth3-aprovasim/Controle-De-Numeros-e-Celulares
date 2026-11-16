@@ -173,6 +173,12 @@ td {
     color: #ffffff;
 }
 
+.bg-ativ-banido-permanente {
+    background-color: #881337;
+    color: #ffffff;
+    border: 1px solid #be123c;
+}
+
 .bg-func-envios {
     background-color: #2b55b5;
     color: #ffffff;

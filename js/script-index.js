@@ -38,7 +38,7 @@ async function carregarDashboard() {
         // Se um número está em campanha ativa e com atividade 'Disponível', sincronizar para 'Em Uso'
         // Status protegidos (Banido, Reconectar, Em Análise, Indisponível) NUNCA são alterados!
         const paraPromoverUso = [];
-        const statusProtegidos = ['Banido', 'Reconectar', 'Em Análise', 'Indisponível'];
+        const statusProtegidos = ['Banido', 'Banido Permanente', 'Banido Permanentemente', 'Reconectar', 'Em Análise', 'Indisponível'];
         chipsEmCampanhasAtivas.forEach(n => {
             if (!statusProtegidos.includes(n.atividade) && n.atividade === 'Disponível') {
                 n.atividade = 'Em Uso';
@@ -54,7 +54,7 @@ async function carregarDashboard() {
         const total = chipsEmCampanhasAtivas.length;
         const emUso = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Em Uso').length;
         const emAnalise = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Em Análise').length;
-        const banidos = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Banido').length;
+        const banidos = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Banido' || n.atividade === 'Banido Permanente' || n.atividade === 'Banido Permanentemente').length;
         const reconectar = chipsEmCampanhasAtivas.filter(n => n.atividade === 'Reconectar').length;
         const campanhasAtivas = campanhasAtivasLista.length;
 
@@ -165,6 +165,10 @@ function renderizarCampanhasDashboard(campanhasAtivasOuTodas, todosNumeros) {
                         borderStyle = '1px solid rgba(239, 68, 68, 0.6)';
                         bgCard = 'rgba(239, 68, 68, 0.10)';
                         corAtividade = '#ef4444';
+                    } else if (ativ === 'Banido Permanente' || ativ === 'Banido Permanentemente') {
+                        borderStyle = '1px solid rgba(225, 29, 72, 0.7)';
+                        bgCard = 'rgba(136, 19, 55, 0.25)';
+                        corAtividade = '#fda4af';
                     } else if (ativ === 'Reconectar') {
                         borderStyle = '1px solid rgba(168, 85, 247, 0.6)';
                         bgCard = 'rgba(168, 85, 247, 0.10)';

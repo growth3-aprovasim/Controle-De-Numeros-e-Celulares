@@ -66,6 +66,8 @@ function obterClasseAtividadeCampanha(atividade) {
         case 'Disponível': return 'bg-ativ-disponivel';
         case 'Em Análise': return 'bg-ativ-analise';
         case 'Banido': return 'bg-ativ-banido';
+        case 'Banido Permanente':
+        case 'Banido Permanentemente': return 'bg-ativ-banido-permanente';
         case 'Reconectar': return 'bg-ativ-reconectar';
         case 'Indisponível': return 'bg-ativ-banido';
         default: return 'bg-ativ-disponivel';
@@ -560,7 +562,7 @@ async function sincronizarStatusNumeros(campanhasAtualizadas) {
         const paraDisponivel = [];
 
         // Status que NUNCA podem ser alterados automaticamente por sincronização de campanha
-        const statusProtegidos = ['Banido', 'Reconectar', 'Em Análise', 'Indisponível'];
+        const statusProtegidos = ['Banido', 'Banido Permanente', 'Banido Permanentemente', 'Reconectar', 'Em Análise', 'Indisponível'];
 
         listaNumerosGeral.forEach(n => {
             // NUNCA alterar status protegidos (Banido, Reconectar, Em Análise, Indisponível) automaticamente!

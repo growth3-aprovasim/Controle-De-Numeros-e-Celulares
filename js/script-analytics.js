@@ -80,7 +80,7 @@ function aplicarFiltroCampanhaAnalytics() {
     const totalDisponivel = numerosAnalisados.filter(n => n.atividade === 'Disponível').length;
     const totalAnalise = numerosAnalisados.filter(n => n.atividade === 'Em Análise').length;
     const totalReconectar = numerosAnalisados.filter(n => n.atividade === 'Reconectar').length;
-    const totalBanidos = numerosAnalisados.filter(n => n.atividade === 'Banido').length;
+    const totalBanidos = numerosAnalisados.filter(n => n.atividade === 'Banido' || n.atividade === 'Banido Permanente' || n.atividade === 'Banido Permanentemente').length;
     const somaTotalBans = numerosAnalisados.reduce((acc, n) => acc + (Number(n.bans) || 0), 0);
 
     let totalChipsNoVip = 0;

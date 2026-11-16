@@ -160,7 +160,7 @@ Tabela principal que armazena todos os **chips/números de telefone**.
 | `plataforma` | text | Plataforma associada (Sendflow, Unnichat, Aquecimento, Vagos) |
 | `nome` | text | Nome de identificação do chip (ex: "MKT 90 (C)") |
 | `numero` | text | Número do celular formatado |
-| `atividade` | text | Status atual: Disponível, Em Uso, Em Análise, Reconectar, Banido |
+| `atividade` | text | Status atual: Disponível, Em Uso, Em Análise, Reconectar, Banido, Banido Permanente |
 | `funcao` | text | Função do número: Envios, Criador, Espião, Reserva |
 | `bans` | int | Contador acumulado de bans |
 | `qualidade` | text | Classificação de qualidade: Alta, Média, Baixa |
@@ -286,7 +286,7 @@ A página principal exibe:
   - Distribuição por função (Envios, Criador, Espião, Reserva)
   - Números por expert
 
-**Comportamento automático:** Se um número está alocado em uma campanha ativa e com status "Disponível", o sistema altera para "Em Uso". Números com status protegidos (**"Banido"**, **"Reconectar"**, **"Em Análise"**, **"Indisponível"**) nunca são alterados automaticamente pelas sincronizações de campanhas.
+**Comportamento automático:** Se um número está alocado em uma campanha ativa e com status "Disponível", o sistema altera para "Em Uso". Números com status protegidos (**"Banido"**, **"Banido Permanente"**, **"Reconectar"**, **"Em Análise"**, **"Indisponível"**) nunca são alterados automaticamente pelas sincronizações de campanhas.
 
 **Realtime:** A página assina as tabelas `cnc_numeros_controle` e `cnc_campanhas` via Supabase Realtime, recarregando automaticamente quando qualquer dado muda.
 
@@ -304,8 +304,9 @@ Gerenciamento completo de todos os chips/números do sistema, separados em **4 t
 4. **🔥 Aquecimento** — Números em período de aquecimento. Colunas: Nome, Número, Atividade, Função, Dias Aquecendo, Observações, Ações.
 
 **Funcionalidades:**
+- Status de atividade: **Disponível**, **Em Uso**, **Em Análise**, **Reconectar**, **Banido** (temporário/em contestação) e **Banido Permanente** (bloqueio definitivo)
 - Busca global em todas as tabelas
-- Filtros por Status, Função e Qualidade (Sendflow) e por BM e Target (Unnichat)
+- Filtros por Status (incluindo Banido Permanente), Função e Qualidade (Sendflow) e por BM e Target (Unnichat)
 - Ordenação por coluna (clicando no cabeçalho)
 - Modal de cadastro/edição com campos dinâmicos por plataforma
 - Modal de histórico do chip (mostra campanhas em que participou)
